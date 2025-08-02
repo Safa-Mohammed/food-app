@@ -13,7 +13,7 @@ import MasterLayout from "./Modules/Shared/Components/MasterLayout/MasterLayout"
 // Auth Pages
 import Login from "./Modules/Authentication/components/Login/Login";
 import Register from "./Modules/Authentication/components/Register/Register";
-import ForgetPassword from "./Modules/Authentication/components/Forget-password/forgetPassword";
+import ForgetPassword from "./Modules/Authentication/components/Forget-password/ForgetPassword";
 import ResetPassword from "./Modules/Authentication/components/ResetPassword/ResetPassword";
 import ChangePassword from "./Modules/Authentication/components/Change-password/changePassword";
 import VerifyAccount from "./Modules/Authentication/components/Verfy-account/verifyAccount";
