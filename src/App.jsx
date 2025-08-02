@@ -22,7 +22,7 @@ import VerifyAccount from "./Modules/Authentication/components/Verfy-account/ver
 import CategoriesData from "./Modules/Categories/categoriesData/categoriesData";
 import CategoriesList from "./Modules/Categories/CategoriesList/CategoriesList";
 import FavouritesList from "./Modules/Favourites/components/FavouritesList/FavouritesList";
-import Notfound from "./Modules/Shared/Components/NotFound/NotFound";
+import Notfound from "./Modules/Shared/Components/Notfound/Notfound";
 import Dashboard from "./Modules/Dashboard/Components/Dashboard/Dashboard";
 
 import { ToastContainer } from 'react-toastify';
