@@ -1,4 +1,3 @@
-import React from "react";
 import logo from "../../../../assets/images/logo1.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -6,10 +5,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { LOGIN_API } from "../../../../constants/api";
-import { useContext } from "react";
-import { AuthContext } from "../../../../context/authContext";
 
-export default function Login() {
+
+export default function Login({ getLoginData }) {
   const navigate = useNavigate();
 
   const {
@@ -17,13 +15,12 @@ export default function Login() {
     formState: { errors },
     handleSubmit,
   } = useForm();
-let {saveUserData}=useContext(AuthContext)
+ 
   const onSubmit = async (data) => {
     try {
       const response = await axios.post(LOGIN_API, data);
       console.log(response);
       localStorage.setItem("userToken", response.data.token);
-      saveUserData();
       toast.success("Login successful!");
 
       setTimeout(() => {
