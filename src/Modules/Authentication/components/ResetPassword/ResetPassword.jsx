@@ -4,12 +4,14 @@ import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../../../constants/api";
 
 const RESET_PASSWORD_API = `${BASE_URL}/Users/Reset`;
 
 export default function ResetPassword() {
+  const location = useLocation();
+  const prefilledEmail = location.state?.email || "";
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,10 +39,22 @@ export default function ResetPassword() {
         navigate("/login");
       }, 1500);
     } catch (error) {
-      const msg = error.response?.data?.message || "Reset failed. Please try again.";
-      toast.error(msg);
+    let msg = "Reset failed. Please try again.";
+    if (error.response?.data?.message) {
+      const backendMsg = error.response.data.message.toLowerCase();
+
+      if (
+        backendMsg.includes("invalid verification code") ||
+        backendMsg.includes("otp")
+      ) {
+        msg = "Invalid OTP. Please check your code.";
+      } else {
+        msg = error.response.data.message;
+      }
     }
-  };
+    toast.error(msg);
+  }
+};
 
   return (
     <div className="auth-container">
@@ -59,43 +73,49 @@ export default function ResetPassword() {
               <div className="mb-3 position-relative">
                 <div className="input-group">
                   <input
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Invalid email address",
-                      },
-                    })}
+                    {...register("email")}
                     type="email"
                     className="form-control ps-5 z-0"
-                    placeholder="Email"
+                    value={prefilledEmail}
+                    disabled
                   />
                 </div>
                 <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1 z-2">
-                  <span><i className="fa fa-envelope"></i></span>
+                  <span>
+                    <i className="fa fa-envelope"></i>
+                  </span>
                 </div>
-                {errors.email && <small className="text-danger">{errors.email.message}</small>}
+                {errors.email && (
+                  <small className="text-danger">{errors.email.message}</small>
+                )}
               </div>
 
-              {/* OTP */}
               <div className="mb-3 position-relative">
-                <div className="input-group">
-                  <input
-                    {...register("otp", {
-                      required: "OTP is required",
-                    })}
-                    type="text"
-                    className="form-control ps-5 z-0"
-                    placeholder="OTP"
-                  />
-                </div>
+  <div className="input-group">
+    <input
+      {...register("otp", {
+        required: "Please enter your OTP",
+        pattern: {
+          value: /^[a-zA-Z0-9]{4}$/,
+          message: "OTP should be 4 letters or numbers",
+        },
+      })}
+      type="text"
+      className="form-control ps-5 z-0"
+      placeholder="OTP"
+    />
+  </div>
                 <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1 z-2">
-                  <span><i className="fa fa-lock"></i></span>
+                  <span>
+                    <i className="fa fa-lock"></i>
+                  </span>
                 </div>
-                {errors.otp && <small className="text-danger">{errors.otp.message}</small>}
+                {errors.otp && (
+                  <small className="text-danger">{errors.otp.message}</small>
+                )}
               </div>
 
-              {/* Password */}
+            {/* Password */}
 <div className="mb-3 position-relative">
   <div className="input-group">
     <input
@@ -104,6 +124,11 @@ export default function ResetPassword() {
         minLength: {
           value: 6,
           message: "Password must be at least 6 characters",
+        },
+        pattern: {
+          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/,
+          message:
+            "Password must include uppercase, lowercase, number, and special character",
         },
       })}
       type={showPassword ? "text" : "password"}
@@ -114,7 +139,9 @@ export default function ResetPassword() {
 
   {/* Left icon */}
   <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1 z-2">
-    <span><i className="fa fa-lock"></i></span>
+    <span>
+      <i className="fa fa-lock"></i>
+    </span>
   </div>
 
   {/* Right eye icon */}
@@ -133,39 +160,46 @@ export default function ResetPassword() {
 
 
               {/* Confirm Password */}
-<div className="mb-4 position-relative">
-  <div className="input-group">
-    <input
-      {...register("confirmPassword", {
-        required: "Confirm Password is required",
-        validate: (value) =>
-          value === password || "Passwords do not match",
-      })}
-      type={showConfirmPassword ? "text" : "password"}
-      className="form-control ps-5 pe-5 z-0"
-      placeholder="Confirm Password"
-    />
-  </div>
+              <div className="mb-4 position-relative">
+                <div className="input-group">
+                  <input
+                    {...register("confirmPassword", {
+                      required: "Confirm Password is required",
+                      validate: (value) =>
+                        value === password || "Passwords do not match",
+                    })}
+                    type={showConfirmPassword ? "text" : "password"}
+                    className="form-control ps-5 pe-5 z-0"
+                    placeholder="Confirm Password"
+                  />
+                </div>
 
-  {/* Left icon */}
-  <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1 z-2">
-    <span><i className="fa fa-lock"></i></span>
-  </div>
+                {/* Left icon */}
+                <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1 z-2">
+                  <span>
+                    <i className="fa fa-lock"></i>
+                  </span>
+                </div>
 
-  {/* Right eye icon */}
-  <span
-    className="position-absolute end-0 top-0 mt-2 me-3"
-    style={{ cursor: "pointer" }}
-    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-  >
-    <i className={showConfirmPassword ? "fa fa-eye" : "fa fa-eye-slash"}></i>
-  </span>
+                {/* Right eye icon */}
+                <span
+                  className="position-absolute end-0 top-0 mt-2 me-3"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <i
+                    className={
+                      showConfirmPassword ? "fa fa-eye" : "fa fa-eye-slash"
+                    }
+                  ></i>
+                </span>
 
-  {errors.confirmPassword && (
-    <small className="text-danger">{errors.confirmPassword.message}</small>
-  )}
-</div>
-
+                {errors.confirmPassword && (
+                  <small className="text-danger">
+                    {errors.confirmPassword.message}
+                  </small>
+                )}
+              </div>
 
               <button type="submit" className="btn btn-success w-100 py-2">
                 Reset Password

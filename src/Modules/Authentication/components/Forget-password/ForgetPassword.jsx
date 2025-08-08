@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "../../../../assets/images/logo1.png";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
@@ -9,6 +9,7 @@ import { RESET_REQUEST_API } from "../../../../constants/api";
 
 export default function ForgetPassword() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);  
 
   const {
     register,
@@ -17,18 +18,21 @@ export default function ForgetPassword() {
   } = useForm();
 
   const onSubmit = async (data) => {
+    setLoading(true); 
     try {
-      const response = await axios.post(RESET_REQUEST_API, { email: data.email });
+      await axios.post(RESET_REQUEST_API, { email: data.email });
       toast.success("Password reset link sent! Please check your email.");
 
-      // Navigate after a short delay to let user see the toast
-      setTimeout(() => {
-        navigate("/reset-password");
-      }, 2500);
       
+      setTimeout(() => {
+       navigate("/reset-password", { state: { email: data.email } });
+      }, 2500);
     } catch (error) {
-      const msg = error.response?.data?.message || "Request failed. Please try again.";
+      const msg =
+        error.response?.data?.message || "Request failed. Please try again.";
       toast.error(msg);
+    } finally {
+      setLoading(false); 
     }
   };
 
@@ -43,7 +47,8 @@ export default function ForgetPassword() {
             <div className="title py-4">
               <h4>Forgot Your Password?</h4>
               <p className="fs-6">
-                No worries! Please enter your email and we will send a password reset link.
+                No worries! Please enter your email and we will send a password
+                reset link.
               </p>
             </div>
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -70,8 +75,19 @@ export default function ForgetPassword() {
                 )}
               </div>
 
-              <button type="submit" className="btn-login py-1 rounded">
-                Submit
+              <button
+                type="submit"
+                className="btn-login py-1 rounded"
+                disabled={loading} 
+              >
+                {loading ? (
+                  <>
+                    <i className="fa fa-spinner fa-spin me-2"></i>
+                    Sending...
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </button>
             </form>
           </div>

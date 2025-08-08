@@ -36,3 +36,27 @@ input[type="password"] {
   -moz-appearance: none;
   appearance: none;
 }
+
+
+.sidebar-continer .ps-sidebar-container{
+  background-color: #1F263E;
+  height: 100vh;
+  border-top-right-radius:40px ;
+
+ 
+}
+.sidebar-continer .ps-menu-button{
+  color: white !important;
+  transition: all 1s;
+}
+.sidebar-continer .ps-menu-button:hover{
+  background-color: rgba(0, 146, 77, 0.2)  ;
+  border-left: 4px solid rgba(0, 146, 78, 0.871);
+}
+
+
+.navbar{
+  background-color: #F8F9FB;
+  border-radius: 10px;
+  margin: 14px 14px;
+}

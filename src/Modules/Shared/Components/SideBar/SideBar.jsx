@@ -1,12 +1,70 @@
-import React from "react";
+import { useState } from 'react';
+import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
+import { Link } from 'react-router-dom';
 
 export default function SideBar({ logout }) {
+
+  const [isCollapse,setIsCollapse]=useState(false)
+  let toggleCollapse =() =>{
+setIsCollapse(!isCollapse)
+  }
   return (
-    <div className="w-100 bg-danger">
+    <div className="w-100  h-100 sidebar-continer">
       {/* Call the logout function on button click */}
-      <button className="btn btn-info" onClick={logout}>
+      {/* <button className="btn btn-info" onClick={logout}>
         Logout
-      </button>
+      </button> */}
+
+      <Sidebar collapsed={isCollapse}>
+ 
+<Menu >
+   
+  <img src="/3.png" alt="logo" className='my-4'  onClick={toggleCollapse}/>
+  <MenuItem
+    icon={<i className="fa fa-home" aria-hidden="true"></i>}
+    component={<Link to="/dashboard" />}
+  >
+    Home
+  </MenuItem>
+
+  <MenuItem
+    icon={<i className="fa fa-users" aria-hidden="true"></i>}
+    component={<Link to="/dashboard/user-list" />}
+  >
+    Users
+  </MenuItem>
+
+  <MenuItem
+    icon={<i className="fa fa-cutlery" aria-hidden="true"></i>}
+    component={<Link to="/dashboard/recipes-list" />}
+  >
+    Recipes
+  </MenuItem>
+
+  <MenuItem
+    icon={<i className="fa fa-list" aria-hidden="true"></i>}
+    component={<Link to="/dashboard/categories-list" />}
+  >
+    Categories
+  </MenuItem>
+
+  <MenuItem
+    icon={<i className="fa fa-key" aria-hidden="true"></i>}
+    component={<Link to="/change-password" />}
+  >
+    Change Password
+  </MenuItem>
+
+<MenuItem
+  icon={<i className="fa fa-sign-out" aria-hidden="true"></i>}
+  onClick={logout}
+>
+  Logout
+</MenuItem>
+
+</Menu>
+
+</Sidebar>
     </div>
-  );
+  )
 }

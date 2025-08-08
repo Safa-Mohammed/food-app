@@ -4,7 +4,7 @@ import SideBar from "../SideBar/SideBar";
 import Navbar from "../Navbar/Navbar";
 import Header from "../Header/header";
 
-export default function MasterLayout() {
+export default function MasterLayout({loginData}) {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -16,13 +16,12 @@ export default function MasterLayout() {
 
   return (
     <>
-      <div className="d-flex">
-        <div className="w-25">
+      <div className="d-flex min-vh-100">
+        <div className="">
           <SideBar logout={logout} />
         </div>
-        <div>
-          <Navbar />
-          <Header />
+        <div className="w-100 "> 
+          <Navbar loginData={loginData}/>
           <Outlet />
         </div>
       </div>
