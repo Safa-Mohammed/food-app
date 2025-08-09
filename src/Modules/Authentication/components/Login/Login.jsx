@@ -5,19 +5,21 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { LOGIN_API } from "../../../../constants/api";
-
+import { useState } from "react";
 
 export default function Login({ getLoginData }) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     formState: { errors },
     handleSubmit,
   } = useForm();
- 
+
   const onSubmit = async (data) => {
     try {
+      setLoading(true); // start loading
       const response = await axios.post(LOGIN_API, data);
       console.log(response);
       localStorage.setItem("userToken", response.data.token);
@@ -30,6 +32,8 @@ export default function Login({ getLoginData }) {
       const msg =
         error.response?.data?.message || "Login failed. Please try again.";
       toast.error(msg);
+    } finally {
+      setLoading(false); // stop loading after success or error
     }
   };
 
@@ -59,6 +63,7 @@ export default function Login({ getLoginData }) {
                   type="email"
                   className="form-control ps-5"
                   placeholder="Enter your E-mail"
+                  disabled={loading}
                 />
                 <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1">
                   <i className="fa fa-envelope"></i>
@@ -81,6 +86,7 @@ export default function Login({ getLoginData }) {
                   type="password"
                   className="form-control ps-5"
                   placeholder="Password"
+                  disabled={loading}
                 />
                 <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1">
                   <i className="fa fa-lock"></i>
@@ -102,8 +108,17 @@ export default function Login({ getLoginData }) {
                 </Link>
               </div>
 
-              <button type="submit" className="btn-login py-1 rounded">
-                Login
+              <button
+                type="submit"
+                className="btn-login py-1 rounded"
+                disabled={loading}
+              >
+                {loading ? (
+                  <i className="fa fa-spinner fa-spin me-2"></i>
+                ) : (
+                  "Login"
+                )}
+                {loading && " Please wait..."}
               </button>
             </form>
           </div>

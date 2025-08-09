@@ -37,10 +37,9 @@ input[type="password"] {
   appearance: none;
 }
 
-
 .sidebar-continer .ps-sidebar-container{
   background-color: #1F263E;
-  height: 100vh;
+  height: 120vh;
   border-top-right-radius:40px ;
 
  

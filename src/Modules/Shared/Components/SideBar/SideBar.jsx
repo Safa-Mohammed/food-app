@@ -9,13 +9,13 @@ export default function SideBar({ logout }) {
 setIsCollapse(!isCollapse)
   }
   return (
-    <div className="w-100  h-100 sidebar-continer">
+<div className="w-100  sidebar-continer d-flex">
       {/* Call the logout function on button click */}
       {/* <button className="btn btn-info" onClick={logout}>
         Logout
       </button> */}
 
-      <Sidebar collapsed={isCollapse}>
+      <Sidebar collapsed={isCollapse} className='sidebaar'>
  
 <Menu >
    
