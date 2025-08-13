@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
 .auth-container {
   background-image: 
     linear-gradient(45deg, rgba(47, 140, 96, 0.6), rgba(0, 0, 0, 0.99)),
@@ -39,8 +44,9 @@ input[type="password"] {
 
 .sidebar-continer .ps-sidebar-container{
   background-color: #1F263E;
-  height: 120vh;
-  border-top-right-radius:40px ;
+  height: 140vh;
+  border-top-right-radius:50px;
+  border-color: none;
 
  
 }
@@ -59,3 +65,10 @@ input[type="password"] {
   border-radius: 10px;
   margin: 14px 14px;
 }
+/* 
+deal with list main steps ::
+-usestatw with empty array.
+-then call api to frt data.
+-thenempty array fill with dta api
+-then map of errau
+*/

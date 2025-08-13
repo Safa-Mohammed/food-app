@@ -31,7 +31,7 @@ export default function Header({ title, desc, imgPath }) {
                 alt="Header"
                 className="img-fluid rounded"
                 style={{
-                  maxHeight: pathname === "/dashboard" ? "250px" : "150px", // Change size here
+                  maxHeight: pathname === "/dashboard" ? "250px" : "150px", 
                   objectFit: "contain"
                 }}
               />

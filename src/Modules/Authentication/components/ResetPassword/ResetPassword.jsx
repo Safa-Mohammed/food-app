@@ -147,7 +147,6 @@ export default function ResetPassword() {
   {/* Right eye icon */}
   <span
     className="position-absolute end-0 top-0 mt-2 me-3"
-    style={{ cursor: "pointer" }}
     onClick={() => setShowPassword(!showPassword)}
   >
     <i className={showPassword ? "fa fa-eye" : "fa fa-eye-slash"}></i>
@@ -184,7 +183,6 @@ export default function ResetPassword() {
                 {/* Right eye icon */}
                 <span
                   className="position-absolute end-0 top-0 mt-2 me-3"
-                  style={{ cursor: "pointer" }}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   <i

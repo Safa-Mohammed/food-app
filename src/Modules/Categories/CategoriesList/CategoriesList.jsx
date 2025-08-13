@@ -1,50 +1,75 @@
+// CategoriesList.js
 import { useEffect, useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
+// API Constants
+import {
+  CATEGORY_API,
+  CATEGORY_BY_ID_API,
+  PAGINATED_CATEGORIES_API,
+} from "../../../constants/api";
+
+// Components
 import Header from "../../Shared/Components/Header/header";
 import imgRecipesList from "/RecipesList.png";
-import axios from "axios";
-import "./CategoriesList.css"; // External CSS for styles
+import "./CategoriesList.css";
 import NoData from "../../Shared/Components/NoData/noData";
-import imgGril from "/Gril.png";
+import DeleteConfrimation from "../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 
 export default function CategoriesList() {
+  // State management
   const [categoryList, setCategoryList] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [pageNumber, setPageNumber] = useState(1);
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
   const menuRef = useRef(null);
 
-  const pageSize = 10;
+  // Form handling
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
-  // Fetch categories with pagination
-  const getAllDate = async (page = 1) => {
+  // Data fetching
+  const getAllData = async (page = 1, size = 5) => {
     try {
-      setLoading(true); // Start loading before request
-      const response = await axios.get(
-        `https://upskilling-egypt.com:3006/api/v1/Category/?pageSize=${pageSize}&pageNumber=${page}`,
-        { headers: { Authorization: localStorage.getItem("userToken") } }
-      );
-      setCategoryList(response.data.data);
+      setLoading(true);
+      const response = await axios.get(PAGINATED_CATEGORIES_API(page, size), {
+        headers: { Authorization: localStorage.getItem("userToken") },
+      });
+
+      setCategoryList(response.data.data || []);
       setTotalPages(response.data.totalNumberOfPages || 1);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
     } finally {
-      setLoading(false); // Stop loading after request
+      setLoading(false);
     }
   };
 
-  // Load categories when page number changes
   useEffect(() => {
-    getAllDate(pageNumber);
+    getAllData(pageNumber, 5);
   }, [pageNumber]);
 
-  // Toggle action menu
+  // UI handlers
   const toggleMenu = (id) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  // Close action menu if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -55,62 +80,85 @@ export default function CategoriesList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Open delete confirmation modal
+  // Delete operations
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
   };
 
-  // Cancel delete modal
   const cancelDelete = () => {
     setDeleteConfirmId(null);
   };
 
-  // Delete category and refresh current page
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `https://upskilling-egypt.com:3006/api/v1/Category/${deleteConfirmId}`,
-        { headers: { Authorization: localStorage.getItem("userToken") } }
-      );
-      getAllDate(pageNumber);
+      setDeleting(true);
+      await axios.delete(CATEGORY_BY_ID_API(deleteConfirmId), {
+        headers: { Authorization: localStorage.getItem("userToken") },
+      });
+      toast.success(" Category deleted successfully!");
+      getAllData(pageNumber);
       setDeleteConfirmId(null);
     } catch (error) {
-      console.log("Delete failed:", error);
-    }
-  };
-
-  // Pagination controls
-  const goToPrevPage = () => {
-    if (pageNumber > 1) setPageNumber(pageNumber - 1);
-  };
-  const goToNextPage = () => {
-    if (pageNumber < totalPages) setPageNumber(pageNumber + 1);
-  };
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) setPageNumber(page);
-  };
-
-  // Render page numbers dynamically
-  const renderPageNumbers = () => {
-    let pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(
-        <button
-          key={i}
-          onClick={() => goToPage(i)}
-          className={`btn btn-sm rounded-circle px-2 ${
-            i === pageNumber ? "btn-success" : "btn-outline-success"
-          }`}
-          style={{ margin: "0 3px" }}
-        >
-          {i}
-        </button>
+      console.error("Delete failed:", error);
+      toast.error(
+        error.response?.data?.message
+          ? ` ${error.response.data.message}`
+          : " Failed to delete category. Please try again."
       );
+    } finally {
+      setDeleting(false);
     }
-    return pages;
   };
 
+  // Form submission
+  const onSubmit = async (data) => {
+    try {
+      if (isEdit && editCategoryId) {
+        // Update existing category
+        await axios.put(
+          CATEGORY_BY_ID_API(editCategoryId),
+          { name: data.categoryName.trim() },
+          { headers: { Authorization: localStorage.getItem("userToken") } }
+        );
+        toast.success("Category updated successfully!");
+      } else {
+        // Create new category
+        await axios.post(
+          CATEGORY_API,
+          { name: data.categoryName.trim() },
+          { headers: { Authorization: localStorage.getItem("userToken") } }
+        );
+        toast.success("Category added successfully!");
+      }
+      setShowModal(false);
+      reset();
+      setIsEdit(false);
+      setEditCategoryId(null);
+      getAllData(pageNumber);
+    } catch (error) {
+      console.error("Save failed:", error);
+      toast.error(error.response?.data?.message || "Failed to save category");
+    }
+  };
+
+  // Modal handlers
+  const openAddModal = () => {
+    setIsEdit(false);
+    setEditCategoryId(null);
+    reset();
+    setShowModal(true);
+  };
+
+  const openEditModal = (category) => {
+    setIsEdit(true);
+    setEditCategoryId(category.id);
+    setValue("categoryName", category.name);
+    setShowModal(true);
+    setOpenMenuId(null);
+  };
+
+  // Render component
   return (
     <>
       <Header
@@ -119,27 +167,28 @@ export default function CategoriesList() {
         desc={
           <>
             <span>
-              You can now add your items that any user can order it from the
+              You can now add your items that any user can order from the
               Application and you can edit
             </span>
-            <br />
-            <span>the Application and you can edit</span>
+            <span> the Application and you can edit</span>
           </>
         }
       />
 
-      {/* Title */}
+      {/* Title Section */}
       <div className="title d-flex justify-content-between p-2 align-items-center">
         <div className="description p-2">
           <h4 className="m-0 fs-5">Categories Table Details</h4>
           <p className="m-0">You can check all details</p>
         </div>
         <div>
-          <button className="btn btn-success me-2">Add New Category</button>
+          <button className="btn btn-success me-2" onClick={openAddModal}>
+            Add New Category
+          </button>
         </div>
       </div>
 
-      {/* Table / Loading / NoData */}
+      {/* Data Table Section */}
       <div className="data p-3">
         {loading ? (
           <div className="text-center py-5">
@@ -163,28 +212,36 @@ export default function CategoriesList() {
                   <tr key={item.id}>
                     <td>{item.id}</td>
                     <td>{item.name}</td>
-                    <td>{item.creationDate}</td>
+                    <td>{new Date(item.creationDate).toLocaleDateString()}</td>
                     <td className="action-cell">
                       <i
                         className="fa-solid fa-ellipsis-h action-icon"
                         onClick={() => toggleMenu(item.id)}
-                        style={{ cursor: "pointer" }}
                       ></i>
 
                       {openMenuId === item.id && (
-                        <div className="action-menu" ref={menuRef}>
-                          <div className="action-menu-item hover-bg" style={{ cursor: "pointer" }}>
+                        <div className="action-menu " ref={menuRef}>
+                          <div
+                            className="action-menu-item hover-bg"
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/view-itemcategory/${item.id}`
+                              )
+                            }
+                          >
                             <i className="fa-regular fa-eye me-2 text-success"></i>
                             View
                           </div>
-                          <div className="action-menu-item hover-bg" style={{ cursor: "pointer" }}>
+                          <div
+                            className="action-menu-item hover-bg"
+                            onClick={() => openEditModal(item)}
+                          >
                             <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
                             Edit
                           </div>
                           <div
                             className="action-menu-item hover-bg"
                             onClick={() => openDeleteModal(item.id)}
-                            style={{ cursor: "pointer" }}
                           >
                             <i className="fa-regular fa-trash-can me-2 text-danger"></i>
                             Delete
@@ -196,28 +253,9 @@ export default function CategoriesList() {
                 ))}
               </tbody>
             </table>
-
-            {/* Pagination Controls */}
-            <div className="pagination-controls d-flex justify-content-center align-items-center my-3">
-              <button
-                className="btn btn-success me-2"
-                onClick={goToPrevPage}
-                disabled={pageNumber === 1}
-              >
-                Previous
-              </button>
-              {renderPageNumbers()}
-              <button
-                className="btn btn-success ms-2"
-                onClick={goToNextPage}
-                disabled={pageNumber === totalPages}
-              >
-                Next
-              </button>
-            </div>
           </>
         ) : (
-          <NoData /> // Only after loading is finished and data is empty
+          <NoData />
         )}
       </div>
 
@@ -228,21 +266,103 @@ export default function CategoriesList() {
             <i
               className="fa fa-close modal-close-icon"
               onClick={cancelDelete}
-              style={{ cursor: "pointer" }}
             ></i>
-            <img src={imgGril} className="w-50 mb-3" alt="Delete Illustration" />
-            <h4 className="mb-3">Delete This Category?</h4>
-            <p className="mb-4">
-              Are you sure you want to delete this item? If you are sure just click
-              on delete it.
-            </p>
+            <DeleteConfrimation deleteItem={"Category"} />
             <div className="modal-buttons border-top border-dark-subtle pt-4 w-100 d-flex justify-content-center">
-              <div className="text-end w-100">
-                <button className="button-delete px-4" onClick={handleDelete}>
-                  Delete This Item
+              <button
+                className="button-delete px-4"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete This Item"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Category Modal */}
+      {showModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content-custom p-4 position-relative">
+            <i
+              className="fa fa-close modal-close-icon"
+              onClick={() => {
+                setShowModal(false);
+                reset();
+                setIsEdit(false);
+                setEditCategoryId(null);
+              }}
+            ></i>
+            <h5 className="mb-4">
+              {isEdit ? "Edit Category" : "Add New Category"}
+            </h5>
+            <form onSubmit={handleSubmit(onSubmit)} className="py-5 ">
+              <div className="mb-4">
+                <input
+                  type="text"
+                  className={`form-control ${
+                    errors.categoryName && "is-invalid "
+                  }`}
+                  placeholder=" Category Name"
+                  {...register("categoryName", {
+                    required: "Category name is required",
+                    minLength: {
+                      value: 3,
+                      message: "Minimum 3 characters required",
+                    },
+                    maxLength: {
+                      value: 50,
+                      message: "Maximum 50 characters allowed",
+                    },
+                  })}
+                />
+                {errors.categoryName && (
+                  <div className="invalid-feedback d-block text-start">
+                    {errors.categoryName.message}
+                  </div>
+                )}
+              </div>
+
+              <div className="d-flex justify-content-end gap-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    setShowModal(false);
+                    reset();
+                    setIsEdit(false);
+                    setEditCategoryId(null);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      {isEdit ? "Saving..." : "Adding..."}
+                    </>
+                  ) : isEdit ? (
+                    "Save Changes"
+                  ) : (
+                    "Add Category"
+                  )}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

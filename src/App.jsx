@@ -1,6 +1,6 @@
 // App.jsx
 import "bootstrap/dist/css/bootstrap.min.css";
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -36,6 +36,10 @@ import Dashboard from "./Modules/Dashboard/Components/Dashboard/Dashboard";
 import ProtectedRoute from "./Modules/Shared/Components/ProtectedRoute/ProtectedRoute";
 import RecipesList from "./Modules/Recipes/components/RecipesList/RecipesList";
 import UserList from "./Modules/Shared/Components/UserList/UserList";
+import RecipesData from "./Modules/Recipes/components/RecipesData/RecipesData";
+import ViewCategory from "./Modules/Categories/CategoryView/viewCategory";
+import RecipesView from "./Modules/Recipes/components/RecipesView/RecipesView";
+import RecipesBanner from "./Modules/Shared/Components/FillRecipse/FillRecipes";
 
 function App() {
   // User login data decoded from token or null
@@ -56,11 +60,9 @@ function App() {
     }
   };
 
-useEffect(()=>{
-if(localStorage.getItem('token'))
-  getLoginData()
-},[])
-
+  useEffect(() => {
+    if (localStorage.getItem("token")) getLoginData();
+  }, []);
 
   // Define routes
   const router = createBrowserRouter([
@@ -81,17 +83,22 @@ if(localStorage.getItem('token'))
       path: "/dashboard",
       element: (
         <ProtectedRoute loginData={loginData}>
-          <MasterLayout loginData={loginData}/>
+          <MasterLayout loginData={loginData} />
         </ProtectedRoute>
       ),
       children: [
-        { index: true, element: <Dashboard  loginData={loginData}/> },
+        { index: true, element: <Dashboard loginData={loginData} /> },
         { path: "dashboard", element: <Dashboard /> },
         { path: "categories-data", element: <CategoriesData /> },
         { path: "categories-list", element: <CategoriesList /> },
         { path: "fav-list", element: <FavouritesList /> },
         { path: "recipes-list", element: <RecipesList /> },
-          { path: "user-list", element: <UserList /> },
+        { path: "recipes-data/:id", element: <RecipesData /> },
+        { path: "recipes-data", element: <RecipesData /> },
+        { path: "user-list", element: <UserList /> },
+        { path: "view-itemcategory/:id", element: <ViewCategory /> },
+        { path: "view-recipes/:id", element: <RecipesView /> },
+           { path: "vbnner-recipes", element: <RecipesBanner /> },
       ],
     },
     {

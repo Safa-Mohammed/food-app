@@ -1,3 +1,4 @@
+import FillRecipes from '../../../Shared/Components/FillRecipse/FillRecipes'
 import Header from '../../../Shared/Components/Header/header'
 import imgDashoard from '/Group 48102127.png'
 
@@ -15,7 +16,9 @@ export default function Dashboard({loginData}) {
           </>
         }
       />
-
+<div>
+  <FillRecipes/>
+</div>
       Dashboard content
     </>
   )

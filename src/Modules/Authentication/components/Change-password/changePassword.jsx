@@ -98,7 +98,6 @@ export default function ChangePassword() {
                   />
                   <span
                     className="position-absolute end-0 top-0 mt-2 me-3"
-                    style={{ cursor: "pointer" }}
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     <i
@@ -138,7 +137,6 @@ export default function ChangePassword() {
                   />
                   <span
                     className="position-absolute end-0 top-0 mt-2 me-3"
-                    style={{ cursor: "pointer" }}
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
                     <i
@@ -169,7 +167,6 @@ export default function ChangePassword() {
                   />
                   <span
                     className="position-absolute end-0 top-0 mt-2 me-3"
-                    style={{ cursor: "pointer" }}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     <i

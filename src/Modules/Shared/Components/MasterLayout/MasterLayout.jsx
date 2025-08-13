@@ -16,7 +16,7 @@ export default function MasterLayout({loginData}) {
 
   return (
     <>
-      <div className="d-flex min-vh-100">
+      <div className="d-flex">
         <div className="">
           <SideBar logout={logout} />
         </div>
