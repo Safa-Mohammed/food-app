@@ -19,7 +19,7 @@ setIsCollapse(!isCollapse)
  
 <Menu >
    
-  <img src="/3.png" alt="logo" className='my-4'  onClick={toggleCollapse}/>
+  <img src="/3.png" alt="logo" className='w-75 my-3'  onClick={toggleCollapse}/>
   <MenuItem
     icon={<i className="fa fa-home" aria-hidden="true"></i>}
     component={<Link to="/dashboard" />}
