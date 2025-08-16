@@ -6,7 +6,7 @@ import Header from "../../../Shared/Components/Header/header";
 import imgRecipesList from "/RecipesList.png";
 import logo from "/3.png";
 import "./RecipesView.css";
-import { RECIPE_BY_ID_API } from "../../../../constants/api";
+import { axiosInstance, RECIPE_BY_ID_API } from "../../../../constants/api";
 
 export default function RecipesView() {
   const { id } = useParams();
@@ -18,9 +18,7 @@ export default function RecipesView() {
     const fetchRecipe = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(RECIPE_BY_ID_API(id), {
-          headers: { Authorization: localStorage.getItem("userToken") },
-        });
+        const response = await axiosInstance.get(RECIPE_BY_ID_API(id),);
         setRecipe(response.data);
       } catch (error) {
         console.error("Error fetching recipe:", error);

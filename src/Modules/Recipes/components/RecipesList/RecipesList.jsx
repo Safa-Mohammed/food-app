@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 
 // Import API constants
-import { RECIPE_API, RECIPE_BY_ID_API } from "../../../../constants/api";
+import { axiosInstance, RECIPE_API, RECIPE_BY_ID_API } from "../../../../constants/api";
 
 export default function RecipesList() {
   const [recipesList, setRecipesList] = useState([]);
@@ -26,9 +26,7 @@ export default function RecipesList() {
   const getAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(RECIPE_API, {
-        headers: { Authorization: localStorage.getItem("userToken") },
-      });
+      const response = await axiosInstance.get(RECIPE_API,);
       setRecipesList(response.data.data || []);
     } catch (error) {
       toast.error("Failed to fetch recipes.");
@@ -72,7 +70,7 @@ export default function RecipesList() {
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
-      await axios.delete(RECIPE_BY_ID_API(deleteConfirmId), {
+      await axiosInstance.delete(RECIPE_BY_ID_API(deleteConfirmId), {
         headers: { Authorization: localStorage.getItem("userToken") },
       });
       toast.success("Recipe deleted successfully.");

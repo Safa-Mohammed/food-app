@@ -3,9 +3,9 @@ import logo from "../../../../assets/images/logo1.png";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { RESET_REQUEST_API } from "../../../../constants/api";
+import { axiosInstance, RESET_REQUEST_API } from "../../../../constants/api";
+import { EMAIL_VALIDATION } from "../../../../Services/validation";
 
 export default function ForgetPassword() {
   const navigate = useNavigate();
@@ -20,8 +20,8 @@ export default function ForgetPassword() {
   const onSubmit = async (data) => {
     setLoading(true); 
     try {
-      await axios.post(RESET_REQUEST_API, { email: data.email });
-      toast.success("Password reset link sent! Please check your email.");
+       let response =await axiosInstance.post(RESET_REQUEST_API, { email: data.email });
+      toast.success( response?.data?.message||"Password reset link sent! Please check your email.");
 
       
       setTimeout(() => {
@@ -37,14 +37,8 @@ export default function ForgetPassword() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="container-fluid">
-        <div className="row vh-100 justify-content-center align-items-center">
-          <div className="col-md-6 rounded-2 px-5 py-5 bg-white">
-            <div className="logo-container bg-transparent text-center">
-              <img className="w-50" src={logo} alt="logo" />
-            </div>
-            <div className="title py-4">
+<>
+<div className="title py-4">
               <h4>Forgot Your Password?</h4>
               <p className="fs-6">
                 No worries! Please enter your email and we will send a password
@@ -55,13 +49,7 @@ export default function ForgetPassword() {
               <div className="mb-3 position-relative">
                 <div className="input-group">
                   <input
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Invalid email address",
-                      },
-                    })}
+                    {...register("email",EMAIL_VALIDATION)}
                     type="email"
                     className="form-control ps-5 z-0"
                     placeholder="Enter your E-mail"
@@ -90,10 +78,6 @@ export default function ForgetPassword() {
                 )}
               </button>
             </form>
-          </div>
-        </div>
-      </div>
-      <ToastContainer position="top-right" autoClose={5000} />
-    </div>
+</>
   );
 }

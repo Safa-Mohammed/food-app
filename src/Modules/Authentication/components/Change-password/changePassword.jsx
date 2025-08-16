@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
-import { CHANGE_PASSWORD_API } from "../../../../constants/api";
+import { axiosInstance, CHANGE_PASSWORD_API } from "../../../../constants/api";
+import { EMAIL_VALIDATION, PASSWORD_VALIDATION } from "../../../../Services/validation";
 
 export default function ChangePassword() {
   const navigate = useNavigate();
@@ -35,21 +35,17 @@ export default function ChangePassword() {
         return;
       }
 
-      await axios.put(
+      await axiosInstance.put(
         CHANGE_PASSWORD_API,
         {
           oldPassword: data.currentPassword,
           newPassword: data.newPassword,
           confirmNewPassword: data.confirmPassword,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        
       );
 
-      toast.success("Password changed successfully!");
+      toast.success( response?.data?.message||"Password changed successfully!");
       setTimeout(() => {
         navigate("/dashboard");
       }, 2000);
@@ -63,14 +59,8 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="container-fluid">
-        <div className="row vh-100 justify-content-center align-items-center">
-          <div className="col-md-6 rounded-2 px-5 py-5 bg-white">
-            <div className="logo-container bg-transparent text-center">
-              <img className="w-50" src={logo} alt="logo" />
-            </div>
-            <div className="title py-1">
+<>
+<div className="title py-1">
               <h4>Change Password</h4>
               <p>Please enter your current and new password</p>
             </div>
@@ -80,18 +70,7 @@ export default function ChangePassword() {
               <div className="mb-3 position-relative">
                 <div className="input-group">
                   <input
-                    {...register("currentPassword", {
-                      required: "Current password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/,
-                        message:
-                          "Password must include uppercase, lowercase, number, and special character",
-                      },
-                    })}
+                    {...register("currentPassword", PASSWORD_VALIDATION)}
                     type={showCurrentPassword ? "text" : "password"}
                     className="form-control ps-5 pe-5 z-0"
                     placeholder="Current Password"
@@ -119,18 +98,7 @@ export default function ChangePassword() {
               <div className="mb-3 position-relative">
                 <div className="input-group">
                   <input
-                    {...register("newPassword", {
-                      required: "New password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/,
-                        message:
-                          "Password must include uppercase, lowercase, number, and special character",
-                      },
-                    })}
+                    {...register("newPassword", EMAIL_VALIDATION)}
                     type={showNewPassword ? "text" : "password"}
                     className="form-control ps-5 pe-5 z-0"
                     placeholder="New Password"
@@ -203,10 +171,6 @@ export default function ChangePassword() {
                 )}
               </button>
             </form>
-          </div>
-        </div>
-      </div>
-      <ToastContainer position="top-right" autoClose={5000} />
-    </div>
+</>
   );
 }

@@ -5,7 +5,7 @@ export default function Header({ title, desc, imgPath }) {
 
   return (
     <div className="container-fluid">
-      <div className="bg-success p-3 rounded-3">
+      <div className="header p-3 rounded-3">
         <div className="row align-items-center justify-content-between">
 
           {/* Text Column */}
@@ -25,15 +25,12 @@ export default function Header({ title, desc, imgPath }) {
 
           {/* Image Column */}
           {(pathname === "/dashboard" || imgPath) && (
-            <div className="col-12 col-md-4 d-flex justify-content-end">
+            <div className="col-12 col-md-4 d-flex justify-content-end ">
               <img
                 src={pathname === "/dashboard" ? "/bg-header.png" : imgPath}
                 alt="Header"
-                className="img-fluid rounded"
-                style={{
-                  maxHeight: pathname === "/dashboard" ? "250px" : "150px", 
-                  objectFit: "contain"
-                }}
+      className={`img-fluid rounded ${pathname === "/dashboard" ? "w-75" : "w-50"}`}
+                
               />
             </div>
           )}

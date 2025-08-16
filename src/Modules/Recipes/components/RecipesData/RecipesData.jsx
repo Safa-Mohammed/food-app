@@ -1,9 +1,10 @@
-import axios from "axios";
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import FillRecipes from "../../../Shared/Components/FillRecipse/FillRecipes";
+import { axiosInstance } from "../../../../constants/api";
 
 export default function RecipesData() {
   const [tagsList, setTagsList] = useState([]);
@@ -45,12 +46,11 @@ formData.append("categoriesIds", data.categoryId);
 
       if (isEdit) {
         // UPDATE
-        await axios.put(
+        await axiosInstance.put(
           `https://upskilling-egypt.com:3006/api/v1/Recipe/${id}`,
           recipeData,
           {
             headers: {
-              Authorization: localStorage.getItem("userToken"),
               "Content-Type": "multipart/form-data",
             },
           }
@@ -58,12 +58,12 @@ formData.append("categoriesIds", data.categoryId);
         toast.success("Recipe updated successfully!");
       } else {
         // ADD
-        await axios.post(
+        await axiosInstance.post(
           "https://upskilling-egypt.com:3006/api/v1/Recipe/",
           recipeData,
           {
             headers: {
-              Authorization: localStorage.getItem("userToken"),
+           
               "Content-Type": "multipart/form-data",
             },
           }
@@ -82,19 +82,18 @@ formData.append("categoriesIds", data.categoryId);
 
   // Fetch categories
   const getAllCategories = async () => {
-    const response = await axios.get(
+    const response = await axiosInstance.get(
       "https://upskilling-egypt.com:3006/api/v1/category?pageSize=50&pageNumber=1",
-      { headers: { Authorization: localStorage.getItem("userToken") } }
+     
     );
     setAllCategories(response.data?.data || []);
   };
 
   // Fetch tags
   const getAllTags = async () => {
-    const response = await axios.get(
+    const response = await axiosInstance.get(
       "https://upskilling-egypt.com:3006/api/v1/tag",
-      { headers: { Authorization: localStorage.getItem("userToken") } }
-    );
+     );
     setTagsList(response.data || []);
   };
 
@@ -102,10 +101,9 @@ formData.append("categoriesIds", data.categoryId);
   const getRecipeDetails = async () => {
     if (!id) return;
     try {
-      const response = await axios.get(
+      const response = await axiosInstance.get(
         `https://upskilling-egypt.com:3006/api/v1/Recipe/${id}`,
-        { headers: { Authorization: localStorage.getItem("userToken") } }
-      );
+       );
 
       const recipe = response.data;
       reset({

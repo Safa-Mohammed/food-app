@@ -3,9 +3,9 @@ import logo from "../../../../assets/images/logo1.png";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BASE_URL } from "../../../../constants/api";
+import { axiosInstance, BASE_URL } from "../../../../constants/api";
+import { PASSWORD_VALIDATION } from "../../../../Services/validation";
 
 const RESET_PASSWORD_API = `${BASE_URL}/Users/Reset`;
 
@@ -27,7 +27,7 @@ export default function ResetPassword() {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post(RESET_PASSWORD_API, {
+      const response = await axiosInstance.post(RESET_PASSWORD_API, {
         email: data.email,
         seed: data.otp,
         password: data.password,
@@ -57,14 +57,7 @@ export default function ResetPassword() {
 };
 
   return (
-    <div className="auth-container">
-      <div className="container-fluid">
-        <div className="row vh-100 justify-content-center align-items-center">
-          <div className="col-md-6 rounded-2 px-5 py-5 bg-white">
-            <div className="logo-container bg-transparent text-center mb-4">
-              <img className="w-25" src={logo} alt="logo" />
-            </div>
-
+<>
             <h4 className="mb-3">Reset Password</h4>
             <p className="mb-4">Please Enter Your OTP or Check Your Inbox</p>
 
@@ -119,18 +112,7 @@ export default function ResetPassword() {
 <div className="mb-3 position-relative">
   <div className="input-group">
     <input
-      {...register("password", {
-        required: "Password is required",
-        minLength: {
-          value: 6,
-          message: "Password must be at least 6 characters",
-        },
-        pattern: {
-          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/,
-          message:
-            "Password must include uppercase, lowercase, number, and special character",
-        },
-      })}
+      {...register("password",PASSWORD_VALIDATION)}
       type={showPassword ? "text" : "password"}
       className="form-control ps-5 pe-5 z-0"
       placeholder="Password"
@@ -162,11 +144,7 @@ export default function ResetPassword() {
               <div className="mb-4 position-relative">
                 <div className="input-group">
                   <input
-                    {...register("confirmPassword", {
-                      required: "Confirm Password is required",
-                      validate: (value) =>
-                        value === password || "Passwords do not match",
-                    })}
+                    {...register("confirmPassword", PASSWORD_VALIDATION)}
                     type={showConfirmPassword ? "text" : "password"}
                     className="form-control ps-5 pe-5 z-0"
                     placeholder="Confirm Password"
@@ -203,10 +181,6 @@ export default function ResetPassword() {
                 Reset Password
               </button>
             </form>
-          </div>
-        </div>
-      </div>
-      <ToastContainer position="top-right" autoClose={5000} />
-    </div>
+</>
   );
 }

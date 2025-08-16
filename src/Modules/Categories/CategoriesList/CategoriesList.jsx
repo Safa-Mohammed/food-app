@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 // API Constants
 import {
+  axiosInstance,
   CATEGORY_API,
   CATEGORY_BY_ID_API,
   PAGINATED_CATEGORIES_API,
@@ -44,22 +45,20 @@ export default function CategoriesList() {
   } = useForm();
 
   // Data fetching
-  const getAllData = async (page = 1, size = 5) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(PAGINATED_CATEGORIES_API(page, size), {
-        headers: { Authorization: localStorage.getItem("userToken") },
-      });
-
-      setCategoryList(response.data.data || []);
-      setTotalPages(response.data.totalNumberOfPages || 1);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  };
+const getAllData = async (page = 1, size = 5) => {
+  try {
+    setLoading(true);
+    const response = await axiosInstance.get(PAGINATED_CATEGORIES_API(page, size));
+    
+    setCategoryList(response.data.data || []);
+    setTotalPages(response.data.totalNumberOfPages || 1);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    toast.error("Failed to load categories");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     getAllData(pageNumber, 5);
@@ -93,9 +92,7 @@ export default function CategoriesList() {
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      await axios.delete(CATEGORY_BY_ID_API(deleteConfirmId), {
-        headers: { Authorization: localStorage.getItem("userToken") },
-      });
+      await axiosInstance.delete(CATEGORY_BY_ID_API(deleteConfirmId));
       toast.success(" Category deleted successfully!");
       getAllData(pageNumber);
       setDeleteConfirmId(null);
@@ -116,7 +113,7 @@ export default function CategoriesList() {
     try {
       if (isEdit && editCategoryId) {
         // Update existing category
-        await axios.put(
+        await axiosInstance.put(
           CATEGORY_BY_ID_API(editCategoryId),
           { name: data.categoryName.trim() },
           { headers: { Authorization: localStorage.getItem("userToken") } }
@@ -124,7 +121,7 @@ export default function CategoriesList() {
         toast.success("Category updated successfully!");
       } else {
         // Create new category
-        await axios.post(
+        await axiosInstance.post(
           CATEGORY_API,
           { name: data.categoryName.trim() },
           { headers: { Authorization: localStorage.getItem("userToken") } }

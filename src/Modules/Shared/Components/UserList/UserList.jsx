@@ -10,7 +10,6 @@ export default function UserList() {
         desc={
           <>
             <span>You can now add your items that any user can order it from the Application and you can edit</span>
-            <br />
             <span>the Application and you can edit</span>
           </>
         }
