@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import Header from "../../../Shared/Components/Header/header";
 import imgRecipesList from "/RecipesList.png";
-import axios from "axios";
 import NoData from "../../../Shared/Components/NoData/noData";
 import logo from "/3.png";
 import { toast } from "react-toastify";
@@ -11,23 +10,52 @@ import { useNavigate } from "react-router-dom";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 
 // Import API constants
-import { axiosInstance, RECIPE_API, RECIPE_BY_ID_API } from "../../../../constants/api";
+import {
+  axiosInstance,
+  RECIPE_API,
+  RECIPE_BY_ID_API,
+  TAG_API,
+  CATEGORY_API,
+  BASE_URL_IMG,
+} from "../../../../constants/api";
 
 export default function RecipesList() {
   const [recipesList, setRecipesList] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [numberOfPages, setNumberOfPages] = useState([]);
+  const [nameValue, setNameValue] = useState("");
+  const [selectedTag, setSelectedTag] = useState("");
+  const [selectedCate, setSelectedCate] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [tags, setTags] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const menuRef = useRef(null);
   let navigate = useNavigate();
 
   // Fetch all recipes
-  const getAllData = async () => {
+  const getAllData = async (pageSize, pageNum, name, tag, category) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(RECIPE_API,);
+      const response = await axiosInstance.get(RECIPE_API, {
+        params: {
+          pageSize,
+          pageNumber: pageNum,
+          name,
+          tag,
+          category,
+        },
+      });
+
       setRecipesList(response.data.data || []);
+      setNumberOfPages(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, i) => i + 1)
+      );
     } catch (error) {
       toast.error("Failed to fetch recipes.");
       console.error("Error fetching recipes:", error);
@@ -36,9 +64,57 @@ export default function RecipesList() {
     }
   };
 
+  // Initial load
   useEffect(() => {
-    getAllData();
+    getAllData(3, 1, "", selectedTag, selectedCate);
   }, []);
+
+  // Fetch tags
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await axiosInstance.get(TAG_API);
+        setTags(response.data);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+    fetchTags();
+  }, []);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get(CATEGORY_API);
+        setCategories(response.data.data || response.data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Handle tag change
+  const handleTagChange = (e) => {
+    const tagId = e.target.value;
+    setSelectedTag(tagId);
+    getAllData(3, 1, nameValue, tagId, selectedCate);
+  };
+
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    const cateId = e.target.value;
+    setSelectedCate(cateId);
+    getAllData(3, 1, nameValue, selectedTag, cateId);
+  };
+
+  // Search by name
+  const getNameValue = (input) => {
+    const name = input.target.value;
+    setNameValue(name);
+    getAllData(3, 1, name, selectedTag, selectedCate);
+  };
 
   // Toggle menu
   const toggleMenu = (id) => {
@@ -74,7 +150,7 @@ export default function RecipesList() {
         headers: { Authorization: localStorage.getItem("userToken") },
       });
       toast.success("Recipe deleted successfully.");
-      getAllData();
+      getAllData(3, 1, nameValue, selectedTag, selectedCate);
       setDeleteConfirmId(null);
     } catch (error) {
       toast.error("Failed to delete recipe.");
@@ -114,6 +190,43 @@ export default function RecipesList() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="search p-4 d-flex gap-3">
+        <input
+          type="search"
+          className="form-control py-2 my-3"
+          placeholder="Search by name ..."
+          onChange={getNameValue}
+        />
+
+        <select
+          className="form-select py-2 my-3"
+          value={selectedTag}
+          onChange={handleTagChange}
+        >
+          <option value="">All Tags</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="form-select py-2 my-3"
+          value={selectedCate}
+          onChange={handleCategoryChange}
+        >
+          <option value="">All Categories</option>
+          {Array.isArray(categories) &&
+            categories.map((cate) => (
+              <option key={cate.id} value={cate.id}>
+                {cate.name}
+              </option>
+            ))}
+        </select>
+      </div>
+
       {/* Data */}
       <div className="data p-3">
         {loading ? (
@@ -146,11 +259,11 @@ export default function RecipesList() {
                       <img
                         src={
                           item.imagePath
-                            ? `https://upskilling-egypt.com:3006/${item.imagePath}`
+                            ? `${BASE_URL_IMG}/${item.imagePath}`
                             : logo
                         }
                         alt={item.name}
-                        onError={(e) => (e.target.src = logo)}
+                        onError={(e) => (e.currentTarget.src = logo)}
                       />
                     </td>
                     <td>{item.price}</td>
@@ -201,6 +314,25 @@ export default function RecipesList() {
         ) : (
           <NoData />
         )}
+
+        {/* Pagination */}
+        <nav aria-label="Page navigation example">
+          <ul className="pagination justify-content-center">
+            {numberOfPages.map((pageNum) => (
+              <li
+                key={pageNum}
+                className="page-item"
+                onClick={() =>
+                  getAllData(3, pageNum, nameValue, selectedTag, selectedCate)
+                }
+              >
+                <a className="page-link" href="#">
+                  {pageNum}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
 
       {/* Delete Modal */}

@@ -39,7 +39,7 @@ import UserList from "./Modules/Shared/Components/UserList/UserList";
 import RecipesData from "./Modules/Recipes/components/RecipesData/RecipesData";
 import ViewCategory from "./Modules/Categories/CategoryView/viewCategory";
 import RecipesView from "./Modules/Recipes/components/RecipesView/RecipesView";
-import RecipesBanner from "./Modules/Shared/Components/FillRecipse/FillRecipes";
+ import ViewUser from "./Modules/Authentication/components/viewUser/viewUser";
 
 function App() {
   // User login data decoded from token or null
@@ -98,7 +98,7 @@ function App() {
         { path: "user-list", element: <UserList /> },
         { path: "view-itemcategory/:id", element: <ViewCategory /> },
         { path: "view-recipes/:id", element: <RecipesView /> },
-           { path: "vbnner-recipes", element: <RecipesBanner /> },
+           { path: "view-user/:id", element: <ViewUser /> },
       ],
     },
     {

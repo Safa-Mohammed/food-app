@@ -1,7 +1,5 @@
-// CategoriesList.js
 import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -29,11 +27,13 @@ export default function CategoriesList() {
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState(null);
-  const [totalPages, setTotalPages] = useState(1);
-  const [pageNumber, setPageNumber] = useState(1);
   const [deleting, setDeleting] = useState(false);
+  const [nameValue, setNameValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const navigate = useNavigate();
   const menuRef = useRef(null);
+  const [numberOfPages, setNumberOfPages] = useState([]);
 
   // Form handling
   const {
@@ -44,31 +44,33 @@ export default function CategoriesList() {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Data fetching
-const getAllData = async (page = 1, size = 5) => {
-  try {
-    setLoading(true);
-    const response = await axiosInstance.get(PAGINATED_CATEGORIES_API(page, size));
-    
-    setCategoryList(response.data.data || []);
-    setTotalPages(response.data.totalNumberOfPages || 1);
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    toast.error("Failed to load categories");
-  } finally {
-    setLoading(false);
-  }
-};
+  const getAllData = async (pageSize, pageNum, name) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(PAGINATED_CATEGORIES_API, {
+        params: { pageSize, pageNumber: pageNum, name },
+      });
 
-  useEffect(() => {
-    getAllData(pageNumber, 5);
-  }, [pageNumber]);
-
-  // UI handlers
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
+      setCategoryList(response.data.data || []);
+      setNumberOfPages(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, i) => i + 1)
+      );
+      setCurrentPage(pageNum);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    getAllData(3, 1);
+  }, []);
+
+  // Handle outside click for menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -79,63 +81,81 @@ const getAllData = async (page = 1, size = 5) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Menu toggle
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
   // Delete operations
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirmId(null);
-  };
+  const cancelDelete = () => setDeleteConfirmId(null);
 
   const handleDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
       setDeleting(true);
-      await axiosInstance.delete(CATEGORY_BY_ID_API(deleteConfirmId));
-      toast.success(" Category deleted successfully!");
-      getAllData(pageNumber);
+      await axiosInstance.delete(CATEGORY_BY_ID_API(deleteConfirmId), {
+        headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
+      });
+      toast.success("Category deleted successfully!");
+      getAllData(3, currentPage, nameValue);
       setDeleteConfirmId(null);
     } catch (error) {
       console.error("Delete failed:", error);
-      toast.error(
-        error.response?.data?.message
-          ? ` ${error.response.data.message}`
-          : " Failed to delete category. Please try again."
-      );
+      const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           "Failed to delete category";
+      toast.error(errorMessage);
     } finally {
       setDeleting(false);
     }
   };
 
+  // Filter and search function
+  const getNameValue = (input) => {
+    const name = input.target.value;
+    setNameValue(name);
+    getAllData(3, 1, name);
+  };
+
   // Form submission
   const onSubmit = async (data) => {
+    const payload = { name: data.categoryName.trim() };
+    
     try {
       if (isEdit && editCategoryId) {
-        // Update existing category
-        await axiosInstance.put(
-          CATEGORY_BY_ID_API(editCategoryId),
-          { name: data.categoryName.trim() },
-          { headers: { Authorization: localStorage.getItem("userToken") } }
-        );
+        await axiosInstance.put(CATEGORY_BY_ID_API(editCategoryId), payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
+        });
         toast.success("Category updated successfully!");
       } else {
-        // Create new category
-        await axiosInstance.post(
-          CATEGORY_API,
-          { name: data.categoryName.trim() },
-          { headers: { Authorization: localStorage.getItem("userToken") } }
-        );
+        await axiosInstance.post(CATEGORY_API, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
+        });
         toast.success("Category added successfully!");
       }
       setShowModal(false);
       reset();
       setIsEdit(false);
       setEditCategoryId(null);
-      getAllData(pageNumber);
+      getAllData(3, currentPage, nameValue);
     } catch (error) {
       console.error("Save failed:", error);
-      toast.error(error.response?.data?.message || "Failed to save category");
+      const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           "Failed to save category";
+      
+      // Handle specific validation errors
+      if (error.response?.data?.errors) {
+        const validationErrors = Object.values(error.response.data.errors).join(", ");
+        toast.error(validationErrors);
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -143,7 +163,7 @@ const getAllData = async (page = 1, size = 5) => {
   const openAddModal = () => {
     setIsEdit(false);
     setEditCategoryId(null);
-    reset();
+    reset({ categoryName: "" });
     setShowModal(true);
   };
 
@@ -155,7 +175,6 @@ const getAllData = async (page = 1, size = 5) => {
     setOpenMenuId(null);
   };
 
-  // Render component
   return (
     <>
       <Header
@@ -184,6 +203,17 @@ const getAllData = async (page = 1, size = 5) => {
           </button>
         </div>
       </div>
+      
+      {/* Search Section */}
+      <div className="search p-4">
+        <input
+          type="search"
+          className="w-100 py-2 form-control my-3"
+          placeholder="Search by name ..."
+          value={nameValue}
+          onChange={getNameValue}
+        />
+      </div>
 
       {/* Data Table Section */}
       <div className="data p-3">
@@ -209,7 +239,11 @@ const getAllData = async (page = 1, size = 5) => {
                   <tr key={item.id}>
                     <td>{item.id}</td>
                     <td>{item.name}</td>
-                    <td>{new Date(item.creationDate).toLocaleDateString()}</td>
+                    <td>
+                      {item.creationDate
+                        ? new Date(item.creationDate).toLocaleDateString()
+                        : "-"}
+                    </td>
                     <td className="action-cell">
                       <i
                         className="fa-solid fa-ellipsis-h action-icon"
@@ -217,13 +251,11 @@ const getAllData = async (page = 1, size = 5) => {
                       ></i>
 
                       {openMenuId === item.id && (
-                        <div className="action-menu " ref={menuRef}>
+                        <div className="action-menu" ref={menuRef}>
                           <div
                             className="action-menu-item hover-bg"
                             onClick={() =>
-                              navigate(
-                                `/dashboard/view-itemcategory/${item.id}`
-                              )
+                              navigate(`/dashboard/view-itemcategory/${item.id}`)
                             }
                           >
                             <i className="fa-regular fa-eye me-2 text-success"></i>
@@ -250,6 +282,47 @@ const getAllData = async (page = 1, size = 5) => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination */}
+            {numberOfPages.length > 1 && (
+              <nav aria-label="Page navigation example">
+                <ul className="pagination justify-content-center">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => getAllData(3, currentPage - 1, nameValue)}
+                      disabled={currentPage === 1}
+                    >
+                      &laquo;
+                    </button>
+                  </li>
+                  
+                  {numberOfPages.map((pageNum) => (
+                    <li
+                      key={pageNum}
+                      className={`page-item ${currentPage === pageNum ? 'active' : ''}`}
+                    >
+                      <button 
+                        className="page-link"
+                        onClick={() => getAllData(3, pageNum, nameValue)}
+                      >
+                        {pageNum}
+                      </button>
+                    </li>
+                  ))}
+                  
+                  <li className={`page-item ${currentPage === numberOfPages.length ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => getAllData(3, currentPage + 1, nameValue)}
+                      disabled={currentPage === numberOfPages.length}
+                    >
+                       &raquo;
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
           </>
         ) : (
           <NoData />
@@ -265,9 +338,16 @@ const getAllData = async (page = 1, size = 5) => {
               onClick={cancelDelete}
             ></i>
             <DeleteConfrimation deleteItem={"Category"} />
-            <div className="modal-buttons border-top border-dark-subtle pt-4 w-100 d-flex justify-content-center">
+            <div className="modal-buttons border-top border-dark-subtle pt-4 w-100 d-flex justify-content-center gap-3">
               <button
-                className="button-delete px-4"
+                className="btn btn-outline-secondary px-4"
+                onClick={cancelDelete}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger px-4"
                 onClick={handleDelete}
                 disabled={deleting}
               >
@@ -277,7 +357,7 @@ const getAllData = async (page = 1, size = 5) => {
                     Deleting...
                   </>
                 ) : (
-                  "Delete This Item"
+                  "Delete"
                 )}
               </button>
             </div>
@@ -298,27 +378,33 @@ const getAllData = async (page = 1, size = 5) => {
                 setEditCategoryId(null);
               }}
             ></i>
-            <h5 className="mb-4">
+            <h5 className="mb-4 text-center">
               {isEdit ? "Edit Category" : "Add New Category"}
             </h5>
-            <form onSubmit={handleSubmit(onSubmit)} className="py-5 ">
+            <form onSubmit={handleSubmit(onSubmit)} className="py-3">
               <div className="mb-4">
+                <label htmlFor="categoryName" className="form-label">Category Name</label>
                 <input
+                  id="categoryName"
                   type="text"
                   className={`form-control ${
-                    errors.categoryName && "is-invalid "
+                    errors.categoryName ? "is-invalid" : ""
                   }`}
-                  placeholder=" Category Name"
+                  placeholder="Enter category name"
                   {...register("categoryName", {
                     required: "Category name is required",
-                    minLength: {
-                      value: 3,
-                      message: "Minimum 3 characters required",
+                    minLength: { 
+                      value: 3, 
+                      message: "Minimum 3 characters required" 
                     },
-                    maxLength: {
-                      value: 50,
-                      message: "Maximum 50 characters allowed",
+                    maxLength: { 
+                      value: 50, 
+                      message: "Maximum 50 characters allowed" 
                     },
+                    pattern: {
+                      value: /^[a-zA-Z0-9\s\-_]+$/,
+                      message: "Only letters, numbers, spaces, hyphens and underscores are allowed"
+                    }
                   })}
                 />
                 {errors.categoryName && (
@@ -328,7 +414,7 @@ const getAllData = async (page = 1, size = 5) => {
                 )}
               </div>
 
-              <div className="d-flex justify-content-end gap-3">
+              <div className="d-flex justify-content-end gap-3 mt-4">
                 <button
                   type="button"
                   className="btn btn-outline-secondary"

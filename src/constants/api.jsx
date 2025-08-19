@@ -34,7 +34,7 @@
 
 // Base API URL
 export const BASE_URL = "https://upskilling-egypt.com:3006/api/v1";
-
+export const BASE_URL_IMG = "https://upskilling-egypt.com:3006/";
 // Create Axios instance
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -55,8 +55,7 @@ export const CHANGE_PASSWORD_API = "/Users/ChangePassword";
 // =======================
 export const CATEGORY_API = "/Category";
 export const CATEGORY_BY_ID_API = (id) => `${CATEGORY_API}/${id}`;
-export const PAGINATED_CATEGORIES_API = (page, size) =>
-  `${CATEGORY_API}?pageSize=${size}&pageNumber=${page}`;
+export const PAGINATED_CATEGORIES_API = CATEGORY_API;
 
 // =======================
 // TAG APIs
@@ -69,3 +68,12 @@ export const TAG_BY_ID_API = (id) => `${TAG_API}/${id}`;
 // =======================
 export const RECIPE_API = "/Recipe";
 export const RECIPE_BY_ID_API = (id) => `${RECIPE_API}/${id}`;
+
+// =======================
+// USERS APIs
+// =======================
+export const USER_URLS = {
+  GET_ALL_USERS: "/Users",
+  USER_BY_ID: (id) => `/Users/${id}`,
+  DELETE_USER: (id) => `/Users/${id}`,
+};
