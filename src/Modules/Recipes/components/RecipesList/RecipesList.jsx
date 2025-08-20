@@ -1,15 +1,15 @@
 import { useEffect, useState, useRef } from "react";
-import Header from "../../../Shared/Components/Header/header";
-import imgRecipesList from "/RecipesList.png";
-import NoData from "../../../Shared/Components/NoData/noData";
-import logo from "/3.png";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./RecipesList.css";
-import { useNavigate } from "react-router-dom";
+import './RecipesList.css'
+import Header from "../../../Shared/Components/Header/header";
+import NoData from "../../../Shared/Components/NoData/noData";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 
-// API imports
+import imgRecipesList from "/RecipesList.png";
+import logo from "/3.png";
+
 import {
   axiosInstance,
   RECIPE_API,
@@ -21,17 +21,18 @@ import {
 
 export default function RecipesList() {
   const [recipesList, setRecipesList] = useState([]);
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  const [loading, setLoading] = useState(true);
   const [numberOfPages, setNumberOfPages] = useState([]);
   const [nameValue, setNameValue] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
   const [selectedCate, setSelectedCate] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  const [tags, setTags] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -39,8 +40,8 @@ export default function RecipesList() {
   const isDataEmpty = !loading && recipesList.length === 0;
   const isDataLoaded = !loading && recipesList.length > 0;
 
-  // Fetch recipes
-  const getAllData = async (pageSize, pageNum, name, tag, category) => {
+  // Fetch recipes with filters
+  const getAllData = async (pageSize = 10, pageNum = 1, name = "", tag = "", category = "") => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(RECIPE_API, {
@@ -48,66 +49,71 @@ export default function RecipesList() {
       });
       setRecipesList(response.data.data || []);
       setNumberOfPages(
-        Array(response.data.totalNumberOfPages)
+        Array(response.data.totalNumberOfPages || 1)
           .fill()
           .map((_, i) => i + 1)
       );
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message
-          ? error.response.data.message
-          : "Failed to fetch recipes."
-      );
+      toast.error(error?.response?.data?.message || "Failed to fetch recipes.");
       console.error("Error fetching recipes:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    getAllData(3, 1, "", selectedTag, selectedCate);
-  }, []);
+  // Fetch all tags
+  const fetchTags = async () => {
+    try {
+      const res = await axiosInstance.get(TAG_API, {
+        params: { pageNumber: 1, pageSize: 1000 }, // get all tags
+      });
+      setTags(res.data.data || res.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch tags.");
+    }
+  };
 
-  // Fetch tags and categories
+  // Fetch all categories
+  const fetchCategories = async () => {
+    try {
+      const res = await axiosInstance.get(CATEGORY_API, {
+        params: { pageNumber: 1, pageSize: 1000 }, // get all categories
+      });
+      setCategories(res.data.data || res.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch categories.");
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const res = await axiosInstance.get(TAG_API);
-        setTags(res.data);
-      } catch (error) {
-        toast.error("Failed to fetch tags.");
-      }
-    };
-    const fetchCategories = async () => {
-      try {
-        const res = await axiosInstance.get(CATEGORY_API);
-        setCategories(res.data.data || res.data || []);
-      } catch (error) {
-        toast.error("Failed to fetch categories.");
-      }
-    };
+    getAllData(10, 1);
     fetchTags();
     fetchCategories();
   }, []);
 
+  // Handle search by name
+  const getNameValue = (e) => {
+    const name = e.target.value;
+    setNameValue(name);
+    getAllData(10, 1, name, selectedTag, selectedCate);
+  };
+
+  // Handle tag change
   const handleTagChange = (e) => {
     const tagId = e.target.value;
     setSelectedTag(tagId);
-    getAllData(3, 1, nameValue, tagId, selectedCate);
+    getAllData(10, 1, nameValue, tagId, selectedCate);
   };
 
+  // Handle category change
   const handleCategoryChange = (e) => {
     const cateId = e.target.value;
     setSelectedCate(cateId);
-    getAllData(3, 1, nameValue, selectedTag, cateId);
+    getAllData(10, 1, nameValue, selectedTag, cateId);
   };
 
-  const getNameValue = (input) => {
-    const name = input.target.value;
-    setNameValue(name);
-    getAllData(3, 1, name, selectedTag, selectedCate);
-  };
-
+  // Handle dropdown menu toggle
   const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
 
   useEffect(() => {
@@ -120,6 +126,7 @@ export default function RecipesList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Delete modal handlers
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
@@ -134,14 +141,10 @@ export default function RecipesList() {
         headers: { Authorization: localStorage.getItem("userToken") },
       });
       toast.success("Recipe deleted successfully.");
-      getAllData(3, 1, nameValue, selectedTag, selectedCate);
+      getAllData(10, 1, nameValue, selectedTag, selectedCate);
       setDeleteConfirmId(null);
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message
-          ? error.response.data.message
-          : "Failed to delete recipe."
-      );
+      toast.error(error?.response?.data?.message || "Failed to delete recipe.");
     } finally {
       setDeleteLoading(false);
     }
@@ -181,13 +184,10 @@ export default function RecipesList() {
           type="search"
           className="form-control py-2 my-3"
           placeholder="Search by name ..."
+          value={nameValue}
           onChange={getNameValue}
         />
-        <select
-          className="form-select py-2 my-3"
-          value={selectedTag}
-          onChange={handleTagChange}
-        >
+        <select className="form-select py-2 my-3" value={selectedTag} onChange={handleTagChange}>
           <option value="">All Tags</option>
           {tags.map((tag) => (
             <option key={tag.id} value={tag.id}>
@@ -195,18 +195,13 @@ export default function RecipesList() {
             </option>
           ))}
         </select>
-        <select
-          className="form-select py-2 my-3"
-          value={selectedCate}
-          onChange={handleCategoryChange}
-        >
+        <select className="form-select py-2 my-3" value={selectedCate} onChange={handleCategoryChange}>
           <option value="">All Categories</option>
-          {Array.isArray(categories) &&
-            categories.map((cate) => (
-              <option key={cate.id} value={cate.id}>
-                {cate.name}
-              </option>
-            ))}
+          {categories.map((cate) => (
+            <option key={cate.id} value={cate.id}>
+              {cate.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -220,7 +215,28 @@ export default function RecipesList() {
           </div>
         )}
 
-        {isDataEmpty && <NoData />}
+        {isDataEmpty && (
+          <div className="text-center py-5">
+            {selectedTag || selectedCate || nameValue ? (
+              <div>
+                <NoData />
+                <button
+                  className="btn btn-outline-primary mt-2"
+                  onClick={() => {
+                    setSelectedTag("");
+                    setSelectedCate("");
+                    setNameValue("");
+                    getAllData(10, 1);
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <NoData />
+            )}
+          </div>
+        )}
 
         {isDataLoaded && (
           <>
@@ -244,13 +260,10 @@ export default function RecipesList() {
                     <td>{item.name}</td>
                     <td>
                       <img
-                        src={
-                          item.imagePath
-                            ? `${BASE_URL_IMG}/${item.imagePath}`
-                            : logo
-                        }
+                        src={item.imagePath ? `${BASE_URL_IMG}/${item.imagePath}` : logo}
                         alt={item.name}
                         onError={(e) => (e.currentTarget.src = logo)}
+                        style={{ width: "50px", height: "50px", objectFit: "cover" }}
                       />
                     </td>
                     <td>{item.price ?? ""}</td>
@@ -272,9 +285,7 @@ export default function RecipesList() {
                           <button
                             type="button"
                             className="action-menu-item hover-bg"
-                            onClick={() =>
-                              navigate(`/dashboard/view-recipes/${item.id}`)
-                            }
+                            onClick={() => navigate(`/dashboard/view-recipes/${item.id}`)}
                           >
                             <i className="fa-regular fa-eye me-2 text-success"></i>
                             View
@@ -282,9 +293,7 @@ export default function RecipesList() {
                           <button
                             type="button"
                             className="action-menu-item hover-bg"
-                            onClick={() =>
-                              navigate(`/dashboard/recipes-data/${item.id}`)
-                            }
+                            onClick={() => navigate(`/dashboard/recipes-data/${item.id}`)}
                           >
                             <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
                             Edit
@@ -312,9 +321,7 @@ export default function RecipesList() {
                   <li
                     key={pageNum}
                     className="page-item"
-                    onClick={() =>
-                      getAllData(3, pageNum, nameValue, selectedTag, selectedCate)
-                    }
+                    onClick={() => getAllData(10, pageNum, nameValue, selectedTag, selectedCate)}
                   >
                     <a className="page-link" href="#">
                       {pageNum}
@@ -340,11 +347,7 @@ export default function RecipesList() {
                 disabled={deleteLoading}
               >
                 {deleteLoading && (
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 )}
                 {deleteLoading ? "Deleting..." : "Delete This Item"}
               </button>

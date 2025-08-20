@@ -1,0 +1,112 @@
+img{
+  width: 20%;
+}
+.description p {
+  font-size: 14px;
+}
+
+/* Action cell positioning */
+.action-cell {
+  position: relative;
+}
+
+/* Three-dot icon cursor */
+.action-icon {
+  cursor: pointer;
+}
+
+/* Hover effect for menu items */
+.hover-bg:hover {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* Dropdown menu styling */
+.action-menu {
+  position: absolute;
+  top: 35% !important;
+  left:  -70px;
+  background-color: white;
+  z-index: 1000;
+  min-width: 150px;
+  box-shadow: 0px 2px 21px rgba(0, 0, 0, 0.345);
+  border-radius: 12px;
+  padding: 4px 0;
+}
+
+/* Small triangle on top center */
+.action-menu::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  right: 15% !important;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 12px solid white;
+}
+
+/* Menu item layout */
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal content */
+.modal-content-custom {
+  background: white;
+  border-radius: 12px;
+  max-width: 640px;
+  max-height: 570px;
+  width: 90%;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  text-align: center;
+}
+
+/* Close icon styling */
+.modal-close-icon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 20px;
+  color: #cc0000;
+  cursor: pointer;
+  border: 2px solid #cc0000;
+  border-radius: 50%;
+  padding: 5px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  transition: all 0.2s ease;
+}
+.modal-close-icon:hover {
+  color: white;
+  background-color: #cc0000;
+}
+
+/* Delete button */
+.button-delete {
+  border: 2px solid #cc0000;
+  padding: 10px 16px;
+  border-radius: 5px;
+  color: #cc0000;
+
+}
+

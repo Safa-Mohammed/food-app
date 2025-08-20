@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance, BASE_URL_IMG, USER_URLS } from "../../../../constants/api";
-
+import './UserList.css'
 import Header from "../../../Shared/Components/Header/header";
 import imgUsersList from "/RecipesList.png";
 import NoData from "../../../Shared/Components/NoData/noData";
