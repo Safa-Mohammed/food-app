@@ -39,12 +39,12 @@ export default function RecipesData() {
         await axiosInstance.put(`${RECIPE_API}/${id}`, recipeData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Recipe updated successfully!");
+        toast.success("Recipe updated successfully!", { autoClose: 2000 });
       } else {
         await axiosInstance.post(RECIPE_API, recipeData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Recipe added successfully!");
+        toast.success("Recipe added successfully!", { autoClose: 2000 });
       }
       navigate("/dashboard/recipes-list");
     } catch (error) {
