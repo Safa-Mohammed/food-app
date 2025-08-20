@@ -128,3 +128,34 @@
   border-radius: 5px;
   color: #cc0000;
 }
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:focus {
+  outline: 2px solid #198754; /* green focus ring for accessibility */
+  outline-offset: 2px;
+}
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.action-menu-item:hover {
+  background-color: #f8f9fa;
+}

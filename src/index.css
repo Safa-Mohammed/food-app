@@ -41,15 +41,28 @@ input[type="password"] {
   -moz-appearance: none;
   appearance: none;
 }
-
+ 
+ .itemss{
+  width: 80%;
+  margin-left: 20%;
+ }
 .sidebar-continer .ps-sidebar-container{
   background-color: #1F263E;
   height: 130vh;
   border-top-right-radius:50px;
   border-color: none;
-
+  max-width: 100%;
+  border: none;
  
 }
+.ps-sidebar-root,
+.sidebaar,
+.ps-sidebar-container {
+  border: none !important;      
+  box-shadow: none !important;  
+  z-index: 100000;
+}
+
 .sidebar-continer .ps-menu-button{
   color: white !important;
   transition: all 1s;
@@ -65,10 +78,10 @@ input[type="password"] {
   border-radius: 10px;
   margin: 14px 14px;
 }
-/* 
-deal with list main steps ::
--usestatw with empty array.
--then call api to frt data.
--thenempty array fill with dta api
--then map of errau
-*/
+.ps-menu-button.ps-active {
+  background-color: #19875432 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+

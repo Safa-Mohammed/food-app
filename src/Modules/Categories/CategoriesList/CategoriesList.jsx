@@ -17,9 +17,9 @@ import imgRecipesList from "/RecipesList.png";
 import "./CategoriesList.css";
 import NoData from "../../Shared/Components/NoData/noData";
 import DeleteConfrimation from "../../Shared/Components/DeleteConfirmation/deleteConfrimation";
+import { CATEGORY_VALIDATION } from "../../../Services/validation";
 
 export default function CategoriesList() {
-  // State management
   const [categoryList, setCategoryList] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -30,30 +30,23 @@ export default function CategoriesList() {
   const [deleting, setDeleting] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [numberOfPages, setNumberOfPages] = useState([]);
 
   const navigate = useNavigate();
   const menuRef = useRef(null);
-  const [numberOfPages, setNumberOfPages] = useState([]);
 
-  // Form handling
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm();
 
-  const getAllData = async (pageSize, pageNum, name) => {
+  // Fetch paginated categories
+  const getAllData = async (pageSize, pageNum, name = "") => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(PAGINATED_CATEGORIES_API, {
         params: { pageSize, pageNumber: pageNum, name },
       });
-
-      setCategoryList(response.data.data || []);
+      setCategoryList(response?.data?.data || []);
       setNumberOfPages(
-        Array(response.data.totalNumberOfPages)
+        Array(response?.data?.totalNumberOfPages || 0)
           .fill()
           .map((_, i) => i + 1)
       );
@@ -70,7 +63,12 @@ export default function CategoriesList() {
     getAllData(3, 1);
   }, []);
 
-  // Handle outside click for menu
+  // Toggle menu
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
+  // Handle click outside menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -81,17 +79,11 @@ export default function CategoriesList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Menu toggle
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
-  };
-
-  // Delete operations
+  // Delete category
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
   };
-
   const cancelDelete = () => setDeleteConfirmId(null);
 
   const handleDelete = async () => {
@@ -106,26 +98,26 @@ export default function CategoriesList() {
       setDeleteConfirmId(null);
     } catch (error) {
       console.error("Delete failed:", error);
-      const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           "Failed to delete category";
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to delete category";
       toast.error(errorMessage);
     } finally {
       setDeleting(false);
     }
   };
 
-  // Filter and search function
+  // Search
   const getNameValue = (input) => {
-    const name = input.target.value;
+    const name = input?.target?.value || "";
     setNameValue(name);
     getAllData(3, 1, name);
   };
 
-  // Form submission
+  // Add/Edit category
   const onSubmit = async (data) => {
-    const payload = { name: data.categoryName.trim() };
-    
+    const payload = { name: data?.categoryName?.trim() || "" };
     try {
       if (isEdit && editCategoryId) {
         await axiosInstance.put(CATEGORY_BY_ID_API(editCategoryId), payload, {
@@ -145,32 +137,29 @@ export default function CategoriesList() {
       getAllData(3, currentPage, nameValue);
     } catch (error) {
       console.error("Save failed:", error);
-      const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           "Failed to save category";
-      
-      // Handle specific validation errors
-      if (error.response?.data?.errors) {
-        const validationErrors = Object.values(error.response.data.errors).join(", ");
-        toast.error(validationErrors);
-      } else {
-        toast.error(errorMessage);
+      let errorMessage = "Failed to save category"; // default
+      if (error?.response?.data?.errors) {
+        errorMessage = Object.values(error.response.data.errors).join(", ");
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
       }
+      toast.error(errorMessage);
     }
   };
 
-  // Modal handlers
+  // Open modals
   const openAddModal = () => {
     setIsEdit(false);
     setEditCategoryId(null);
     reset({ categoryName: "" });
     setShowModal(true);
   };
-
   const openEditModal = (category) => {
     setIsEdit(true);
-    setEditCategoryId(category.id);
-    setValue("categoryName", category.name);
+    setEditCategoryId(category?.id || null);
+    setValue("categoryName", category?.name || "");
     setShowModal(true);
     setOpenMenuId(null);
   };
@@ -181,13 +170,7 @@ export default function CategoriesList() {
         imgPath={imgRecipesList}
         title="Categories List"
         desc={
-          <>
-            <span>
-              You can now add your items that any user can order from the
-              Application and you can edit
-            </span>
-            <span> the Application and you can edit</span>
-          </>
+          <span>You can now add your items that any user can order from the Application and edit them.</span>
         }
       />
 
@@ -203,7 +186,7 @@ export default function CategoriesList() {
           </button>
         </div>
       </div>
-      
+
       {/* Search Section */}
       <div className="search p-4">
         <input
@@ -215,7 +198,7 @@ export default function CategoriesList() {
         />
       </div>
 
-      {/* Data Table Section */}
+      {/* Data Table Section using ternary */}
       <div className="data p-3">
         {loading ? (
           <div className="text-center py-5">
@@ -223,7 +206,11 @@ export default function CategoriesList() {
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : categoryList.length > 0 ? (
+        ) : categoryList?.length === 0 ? (
+          <div className="text-center py-5">
+            <NoData />
+          </div>
+        ) : (
           <>
             <table className="table table-striped text-center">
               <thead>
@@ -236,45 +223,46 @@ export default function CategoriesList() {
               </thead>
               <tbody>
                 {categoryList.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.name}</td>
-                    <td>
-                      {item.creationDate
-                        ? new Date(item.creationDate).toLocaleDateString()
-                        : "-"}
-                    </td>
+                  <tr key={item?.id || Math.random()}>
+                    <td>{item?.id || "-"}</td>
+                    <td>{item?.name || "N/A"}</td>
+                    <td>{item?.creationDate ? new Date(item.creationDate).toLocaleDateString() : "-"}</td>
                     <td className="action-cell">
-                      <i
-                        className="fa-solid fa-ellipsis-h action-icon"
-                        onClick={() => toggleMenu(item.id)}
-                      ></i>
+                      <button
+                        type="button"
+                        className="btn-icon"
+                        onClick={() => toggleMenu(item?.id)}
+                        aria-label="Open actions menu"
+                      >
+                        <i className="fa-solid fa-ellipsis-h"></i>
+                      </button>
 
-                      {openMenuId === item.id && (
+                      {openMenuId === item?.id && (
                         <div className="action-menu" ref={menuRef}>
-                          <div
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
-                            onClick={() =>
-                              navigate(`/dashboard/view-itemcategory/${item.id}`)
-                            }
+                            onClick={() => navigate(`/dashboard/view-itemcategory/${item?.id}`)}
+                            aria-label={`View ${item?.name || ""}`}
                           >
-                            <i className="fa-regular fa-eye me-2 text-success"></i>
-                            View
-                          </div>
-                          <div
+                            <i className="fa-regular fa-eye me-2 text-success"></i>View
+                          </button>
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
                             onClick={() => openEditModal(item)}
+                            aria-label={`Edit ${item?.name || ""}`}
                           >
-                            <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
-                            Edit
-                          </div>
-                          <div
+                            <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>Edit
+                          </button>
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
-                            onClick={() => openDeleteModal(item.id)}
+                            onClick={() => openDeleteModal(item?.id)}
+                            aria-label={`Delete ${item?.name || ""}`}
                           >
-                            <i className="fa-regular fa-trash-can me-2 text-danger"></i>
-                            Delete
-                          </div>
+                            <i className="fa-regular fa-trash-can me-2 text-danger"></i>Delete
+                          </button>
                         </div>
                       )}
                     </td>
@@ -282,27 +270,27 @@ export default function CategoriesList() {
                 ))}
               </tbody>
             </table>
-            
+
             {/* Pagination */}
-            {numberOfPages.length > 1 && (
+            {numberOfPages?.length > 1 && (
               <nav aria-label="Page navigation example">
                 <ul className="pagination justify-content-center">
                   <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+                    <button
+                      className="page-link"
                       onClick={() => getAllData(3, currentPage - 1, nameValue)}
                       disabled={currentPage === 1}
                     >
                       &laquo;
                     </button>
                   </li>
-                  
+
                   {numberOfPages.map((pageNum) => (
                     <li
                       key={pageNum}
                       className={`page-item ${currentPage === pageNum ? 'active' : ''}`}
                     >
-                      <button 
+                      <button
                         className="page-link"
                         onClick={() => getAllData(3, pageNum, nameValue)}
                       >
@@ -310,22 +298,20 @@ export default function CategoriesList() {
                       </button>
                     </li>
                   ))}
-                  
-                  <li className={`page-item ${currentPage === numberOfPages.length ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+
+                  <li className={`page-item ${currentPage === numberOfPages?.length ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
                       onClick={() => getAllData(3, currentPage + 1, nameValue)}
-                      disabled={currentPage === numberOfPages.length}
+                      disabled={currentPage === numberOfPages?.length}
                     >
-                       &raquo;
+                      &raquo;
                     </button>
                   </li>
                 </ul>
               </nav>
             )}
           </>
-        ) : (
-          <NoData />
         )}
       </div>
 
@@ -333,24 +319,13 @@ export default function CategoriesList() {
       {deleteConfirmId !== null && (
         <div className="modal-backdrop">
           <div className="modal-content-custom p-4 text-center d-flex flex-column align-items-center position-relative">
-            <i
-              className="fa fa-close modal-close-icon"
-              onClick={cancelDelete}
-            ></i>
+            <i className="fa fa-close modal-close-icon" onClick={cancelDelete}></i>
             <DeleteConfrimation deleteItem={"Category"} />
             <div className="modal-buttons border-top border-dark-subtle pt-4 w-100 d-flex justify-content-center gap-3">
-              <button
-                className="btn btn-outline-secondary px-4"
-                onClick={cancelDelete}
-                disabled={deleting}
-              >
+              <button className="btn btn-outline-secondary px-4" onClick={cancelDelete} disabled={deleting}>
                 Cancel
               </button>
-              <button
-                className="btn btn-danger px-4"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
+              <button className="btn btn-danger px-4" onClick={handleDelete} disabled={deleting}>
                 {deleting ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2"></span>
@@ -378,39 +353,19 @@ export default function CategoriesList() {
                 setEditCategoryId(null);
               }}
             ></i>
-            <h5 className="mb-4 text-center">
-              {isEdit ? "Edit Category" : "Add New Category"}
-            </h5>
+            <h5 className="mb-4 text-center">{isEdit ? "Edit Category" : "Add New Category"}</h5>
             <form onSubmit={handleSubmit(onSubmit)} className="py-3">
               <div className="mb-4">
                 <label htmlFor="categoryName" className="form-label">Category Name</label>
                 <input
                   id="categoryName"
                   type="text"
-                  className={`form-control ${
-                    errors.categoryName ? "is-invalid" : ""
-                  }`}
+                  className={`form-control ${errors?.categoryName ? "is-invalid" : ""}`}
                   placeholder="Enter category name"
-                  {...register("categoryName", {
-                    required: "Category name is required",
-                    minLength: { 
-                      value: 3, 
-                      message: "Minimum 3 characters required" 
-                    },
-                    maxLength: { 
-                      value: 50, 
-                      message: "Maximum 50 characters allowed" 
-                    },
-                    pattern: {
-                      value: /^[a-zA-Z0-9\s\-_]+$/,
-                      message: "Only letters, numbers, spaces, hyphens and underscores are allowed"
-                    }
-                  })}
+                  {...register("categoryName", CATEGORY_VALIDATION)}
                 />
-                {errors.categoryName && (
-                  <div className="invalid-feedback d-block text-start">
-                    {errors.categoryName.message}
-                  </div>
+                {errors?.categoryName && (
+                  <div className="invalid-feedback d-block text-start">{errors.categoryName.message}</div>
                 )}
               </div>
 
@@ -428,21 +383,16 @@ export default function CategoriesList() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      {isEdit ? "Saving..." : "Adding..."}
-                    </>
-                  ) : isEdit ? (
-                    "Save Changes"
-                  ) : (
-                    "Add Category"
-                  )}
+                <button type="submit" className="btn btn-success" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        {isEdit ? "Saving..." : "Adding..."}
+                      </>
+                    )
+                    : isEdit ? "Save Changes" : "Add Category"
+                  }
                 </button>
               </div>
             </form>

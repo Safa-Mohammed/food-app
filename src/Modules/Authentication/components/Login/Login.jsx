@@ -14,8 +14,8 @@ export default function Login({ getLoginData }) {
 
   const {
     register,
-    formState: { errors,isSubmitting },
     handleSubmit,
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -23,7 +23,7 @@ export default function Login({ getLoginData }) {
       const response = await axiosInstance.post(LOGIN_API, data);
       console.log(response);
       localStorage.setItem("userToken", response.data.token);
-      toast.success( response?.data?.message||"Login successful!");
+      toast.success(response?.data?.message || "Login successful!");
 
       setTimeout(() => {
         navigate("/dashboard");
@@ -32,8 +32,7 @@ export default function Login({ getLoginData }) {
       const msg =
         error.response?.data?.message || "Login failed. Please try again.";
       toast.error(msg);
-    } finally {
-    }
+    } 
   };
 
   return (
@@ -50,7 +49,6 @@ export default function Login({ getLoginData }) {
             type="email"
             className="form-control ps-5"
             placeholder="Enter your E-mail"
-           
           />
           <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1">
             <i className="fa fa-envelope"></i>
@@ -93,7 +91,7 @@ export default function Login({ getLoginData }) {
           className="btn-login py-1 rounded"
           disabled={isSubmitting}
         >
-          {isSubmitting?"isSubmitting":"Submit"}
+          {isSubmitting ? "Loading..." : "Submit"}
         </button>
       </form>
     </>

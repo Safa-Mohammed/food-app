@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
-// API Constants
 import { axiosInstance, BASE_URL_IMG, USER_URLS } from "../../../../constants/api";
 
-// Components
 import Header from "../../../Shared/Components/Header/header";
 import imgUsersList from "/RecipesList.png";
 import NoData from "../../../Shared/Components/NoData/noData";
@@ -17,91 +14,93 @@ export default function UsersList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [loading, setLoading] = useState(true);
-    const [numberOfPages, setnumberOfPages] = useState([]);
-
   const [deleting, setDeleting] = useState(false);
+  const [numberOfPages, setNumberOfPages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 4;
+
   const navigate = useNavigate();
 
+  // Determine UI states
+  const isDataEmpty = !loading && usersList.length === 0;
+  const isDataLoaded = !loading && usersList.length > 0;
 
-  // Function to get the page numbers to display (max 5 pages at a time)
-const getVisiblePages = () => {
-  const total = numberOfPages.length;
-  const maxVisible = 5;
-  let start = Math.max(currentPage - 2, 1);
-  let end = Math.min(start + maxVisible - 1, total);
+  const getVisiblePages = () => {
+    const total = numberOfPages.length;
+    const maxVisible = 5;
+    let start = Math.max(currentPage - 2, 1);
+    let end = Math.min(start + maxVisible - 1, total);
 
-  // Adjust start if we are near the end
-  if (end - start < maxVisible - 1) {
-    start = Math.max(end - maxVisible + 1, 1);
-  }
+    if (end - start < maxVisible - 1) {
+      start = Math.max(end - maxVisible + 1, 1);
+    }
 
-  return numberOfPages.slice(start - 1, end);
-};
-const [currentPage, setCurrentPage] = useState(1);
-
-  // Fetch all users
- const getAllUsers = async (pageSize, pageNumber) => {
-  try {
-    setLoading(true);
-
-    const response = await axiosInstance.get(USER_URLS.GET_ALL_USERS, {
-      params: {
-        pageSize,
-        pageNumber,
-      },
-    });
-    setnumberOfPages(Array(response.data.totalNumberOfPages).fill().map((_, i) => i + 1));
-    setUsersList(response.data.data || []);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    toast.error("Failed to load users");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  useEffect(() => {
-    getAllUsers(4,1);
-  }, []);
-
-  // Toggle action menu
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
+    return numberOfPages.slice(start - 1, end);
   };
 
-  // Delete operations
+  const getAllUsers = async (pageSize, pageNumber) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(USER_URLS.GET_ALL_USERS, {
+        params: { pageSize, pageNumber },
+      });
+      setNumberOfPages(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, i) => i + 1)
+      );
+      setUsersList(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error(
+        error?.response?.data?.message
+          ? error.response.data.message
+          : "Failed to load users"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getAllUsers(pageSize, currentPage);
+  }, [currentPage]);
+
+  const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
+
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirmId(null);
-  };
+  const cancelDelete = () => setDeleteConfirmId(null);
 
-  const handleDelete = async (id) => {
-
+  const handleDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
       setDeleting(true);
-      await axiosInstance.delete(`${USER_URLS.DELETE_USER(id)}`);
+      await axiosInstance.delete(USER_URLS.DELETE_USER(deleteConfirmId));
       toast.success("User deleted successfully!");
-      getAllUsers();
+      getAllUsers(pageSize, currentPage);
       setDeleteConfirmId(null);
     } catch (error) {
       console.error("Delete failed:", error);
       toast.error(
-        error.response?.data?.message || "Failed to delete user. Please try again."
+        error?.response?.data?.message
+          ? error.response.data.message
+          : "Failed to delete user. Please try again."
       );
     } finally {
       setDeleting(false);
     }
   };
 
-  // Close menu if click outside action menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest(".action-menu") && !event.target.closest(".action-icon")) {
+      if (
+        !event.target.closest(".action-menu") &&
+        !event.target.closest(".btn-icon")
+      ) {
         setOpenMenuId(null);
       }
     };
@@ -122,7 +121,6 @@ const [currentPage, setCurrentPage] = useState(1);
         }
       />
 
-      {/* Title Section */}
       <div className="title d-flex justify-content-between p-2 align-items-center">
         <div className="description p-2">
           <h4 className="m-0 fs-5">Users Table Details</h4>
@@ -130,15 +128,18 @@ const [currentPage, setCurrentPage] = useState(1);
         </div>
       </div>
 
-      {/* Data Table Section */}
       <div className="data p-3">
-        {loading ? (
+        {loading && (
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : usersList.length > 0 ? (
+        )}
+
+        {isDataEmpty && <NoData />}
+
+        {isDataLoaded && (
           <table className="table table-striped text-center">
             <thead>
               <tr>
@@ -153,40 +154,49 @@ const [currentPage, setCurrentPage] = useState(1);
             <tbody>
               {usersList.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.userName}</td>
+                  <td>{user?.userName || "N/A"}</td>
                   <td>
                     <img
-                      src={user.imagePath ? `${BASE_URL_IMG}${user.imagePath}` : logo}
-                      alt={user.userName}
+                      src={user?.imagePath ? `${BASE_URL_IMG}${user.imagePath}` : logo}
+                      alt={user?.userName || "User"}
                       onError={(e) => (e.target.src = logo)}
                       className="w-25"
                     />
                   </td>
-                  <td>{user.email}</td>
-                  <td>{user.country}</td>
-                  <td>{user.phoneNumber}</td>
+                  <td>{user?.email || "N/A"}</td>
+                  <td>{user?.country || "N/A"}</td>
+                  <td>{user?.phoneNumber || "N/A"}</td>
                   <td className="action-cell">
-                    <i
-                      className="fa-solid fa-ellipsis-h action-icon"
+                    <button
+                      type="button"
+                      className="btn-icon"
                       onClick={() => toggleMenu(user.id)}
-                    ></i>
+                      aria-label="Open actions menu"
+                    >
+                      <i className="fa-solid fa-ellipsis-h"></i>
+                    </button>
 
                     {openMenuId === user.id && (
                       <div className="action-menu">
-                        <div
+                        <button
+                          type="button"
                           className="action-menu-item hover-bg"
                           onClick={() => navigate(`/dashboard/view-user/${user.id}`)}
+                          aria-label={`View ${user.userName}`}
                         >
                           <i className="fa-regular fa-eye me-2 text-success"></i>
                           View
-                        </div>
-                        <div
+                        </button>
+
+                        <button
+                          type="button"
                           className="action-menu-item hover-bg"
                           onClick={() => openDeleteModal(user.id)}
+                          aria-label={`Delete ${user.userName}`}
                         >
                           <i className="fa-regular fa-trash-can me-2 text-danger"></i>
                           Delete
-                        </div>
+                        </button>
                       </div>
                     )}
                   </td>
@@ -194,56 +204,39 @@ const [currentPage, setCurrentPage] = useState(1);
               ))}
             </tbody>
           </table>
-        ) : (
-          <NoData />
         )}
       </div>
-<nav aria-label="Page navigation example">
-  <ul className="pagination justify-content-center">
 
-    {/* Previous Button */}
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button
-        className="page-link"
-        onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-      >
-        &laquo;
-      </button>
-    </li>
+      {/* Pagination */}
+      <nav aria-label="Page navigation example">
+        <ul className="pagination justify-content-center">
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button
+              className="page-link"
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+            >
+              &laquo;
+            </button>
+          </li>
 
-    {/* Visible Pages */}
-    {getVisiblePages().map((pageNum) => (
-      <li
-        key={pageNum}
-        className={`page-item ${currentPage === pageNum ? "active" : ""}`}
-      >
-        <button
-          className="page-link"
-          onClick={() => setCurrentPage(pageNum)}
-        >
-          {pageNum}
-        </button>
-      </li>
-    ))}
+          {getVisiblePages().map((pageNum) => (
+            <li key={pageNum} className={`page-item ${currentPage === pageNum ? "active" : ""}`}>
+              <button className="page-link" onClick={() => setCurrentPage(pageNum)}>
+                {pageNum}
+              </button>
+            </li>
+          ))}
 
-    {/* Next Button */}
-    <li
-      className={`page-item ${
-        currentPage === numberOfPages.length ? "disabled" : ""
-      }`}
-    >
-      <button
-        className="page-link"
-        onClick={() =>
-          currentPage < numberOfPages.length &&
-          setCurrentPage(currentPage + 1)
-        }
-      >
-        &raquo;
-      </button>
-    </li>
-  </ul>
-</nav>
+          <li className={`page-item ${currentPage === numberOfPages.length ? "disabled" : ""}`}>
+            <button
+              className="page-link"
+              onClick={() => currentPage < numberOfPages.length && setCurrentPage(currentPage + 1)}
+            >
+              &raquo;
+            </button>
+          </li>
+        </ul>
+      </nav>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId !== null && (

@@ -9,7 +9,7 @@ import "./RecipesList.css";
 import { useNavigate } from "react-router-dom";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 
-// Import API constants
+// API imports
 import {
   axiosInstance,
   RECIPE_API,
@@ -34,22 +34,18 @@ export default function RecipesList() {
   const [categories, setCategories] = useState([]);
 
   const menuRef = useRef(null);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
-  // Fetch all recipes
+  const isDataEmpty = !loading && recipesList.length === 0;
+  const isDataLoaded = !loading && recipesList.length > 0;
+
+  // Fetch recipes
   const getAllData = async (pageSize, pageNum, name, tag, category) => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(RECIPE_API, {
-        params: {
-          pageSize,
-          pageNumber: pageNum,
-          name,
-          tag,
-          category,
-        },
+        params: { pageSize, pageNumber: pageNum, name, tag, category },
       });
-
       setRecipesList(response.data.data || []);
       setNumberOfPages(
         Array(response.data.totalNumberOfPages)
@@ -57,71 +53,63 @@ export default function RecipesList() {
           .map((_, i) => i + 1)
       );
     } catch (error) {
-      toast.error("Failed to fetch recipes.");
+      toast.error(
+        error?.response?.data?.message
+          ? error.response.data.message
+          : "Failed to fetch recipes."
+      );
       console.error("Error fetching recipes:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial load
   useEffect(() => {
     getAllData(3, 1, "", selectedTag, selectedCate);
   }, []);
 
-  // Fetch tags
+  // Fetch tags and categories
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await axiosInstance.get(TAG_API);
-        setTags(response.data);
+        const res = await axiosInstance.get(TAG_API);
+        setTags(res.data);
       } catch (error) {
-        console.error("Error fetching tags:", error);
+        toast.error("Failed to fetch tags.");
+      }
+    };
+    const fetchCategories = async () => {
+      try {
+        const res = await axiosInstance.get(CATEGORY_API);
+        setCategories(res.data.data || res.data || []);
+      } catch (error) {
+        toast.error("Failed to fetch categories.");
       }
     };
     fetchTags();
-  }, []);
-
-  // Fetch categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axiosInstance.get(CATEGORY_API);
-        setCategories(response.data.data || response.data || []);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
     fetchCategories();
   }, []);
 
-  // Handle tag change
   const handleTagChange = (e) => {
     const tagId = e.target.value;
     setSelectedTag(tagId);
     getAllData(3, 1, nameValue, tagId, selectedCate);
   };
 
-  // Handle category change
   const handleCategoryChange = (e) => {
     const cateId = e.target.value;
     setSelectedCate(cateId);
     getAllData(3, 1, nameValue, selectedTag, cateId);
   };
 
-  // Search by name
   const getNameValue = (input) => {
     const name = input.target.value;
     setNameValue(name);
     getAllData(3, 1, name, selectedTag, selectedCate);
   };
 
-  // Toggle menu
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
-  };
+  const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
 
-  // Close menu if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -132,17 +120,13 @@ export default function RecipesList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Open delete modal
   const openDeleteModal = (id) => {
     setDeleteConfirmId(id);
     setOpenMenuId(null);
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirmId(null);
-  };
+  const cancelDelete = () => setDeleteConfirmId(null);
 
-  // Delete recipe
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
@@ -153,8 +137,11 @@ export default function RecipesList() {
       getAllData(3, 1, nameValue, selectedTag, selectedCate);
       setDeleteConfirmId(null);
     } catch (error) {
-      toast.error("Failed to delete recipe.");
-      console.error("Delete failed:", error);
+      toast.error(
+        error?.response?.data?.message
+          ? error.response.data.message
+          : "Failed to delete recipe."
+      );
     } finally {
       setDeleteLoading(false);
     }
@@ -174,20 +161,18 @@ export default function RecipesList() {
         }
       />
 
-      {/* Title */}
+      {/* Title & Add Button */}
       <div className="title d-flex justify-content-between p-2 align-items-center">
         <div className="description p-2">
           <h4 className="m-0 fs-5">Recipes Table Details</h4>
           <p className="m-0">View, edit or delete recipes</p>
         </div>
-        <div>
-          <button
-            className="btn btn-success me-2"
-            onClick={() => navigate("/dashboard/recipes-data")}
-          >
-            Add New Recipe
-          </button>
-        </div>
+        <button
+          className="btn btn-success me-2"
+          onClick={() => navigate("/dashboard/recipes-data")}
+        >
+          Add New Recipe
+        </button>
       </div>
 
       {/* Filters */}
@@ -198,7 +183,6 @@ export default function RecipesList() {
           placeholder="Search by name ..."
           onChange={getNameValue}
         />
-
         <select
           className="form-select py-2 my-3"
           value={selectedTag}
@@ -211,7 +195,6 @@ export default function RecipesList() {
             </option>
           ))}
         </select>
-
         <select
           className="form-select py-2 my-3"
           value={selectedCate}
@@ -227,15 +210,19 @@ export default function RecipesList() {
         </select>
       </div>
 
-      {/* Data */}
+      {/* Data Section */}
       <div className="data p-3">
-        {loading ? (
+        {loading && (
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : recipesList.length > 0 ? (
+        )}
+
+        {isDataEmpty && <NoData />}
+
+        {isDataLoaded && (
           <>
             <table className="table table-striped text-center">
               <thead>
@@ -266,19 +253,24 @@ export default function RecipesList() {
                         onError={(e) => (e.currentTarget.src = logo)}
                       />
                     </td>
-                    <td>{item.price}</td>
-                    <td>{item.description}</td>
+                    <td>{item.price ?? ""}</td>
+                    <td>{item.description ?? ""}</td>
                     <td>{item.category?.[0]?.name || ""}</td>
                     <td>{item.tag?.name || ""}</td>
                     <td className="action-cell">
-                      <i
-                        className="fa-solid fa-ellipsis-h action-icon"
+                      <button
+                        type="button"
+                        className="btn-icon"
                         onClick={() => toggleMenu(item.id)}
-                      ></i>
+                        aria-label="Open actions menu"
+                      >
+                        <i className="fa-solid fa-ellipsis-h"></i>
+                      </button>
 
                       {openMenuId === item.id && (
                         <div className="action-menu" ref={menuRef}>
-                          <div
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
                             onClick={() =>
                               navigate(`/dashboard/view-recipes/${item.id}`)
@@ -286,8 +278,9 @@ export default function RecipesList() {
                           >
                             <i className="fa-regular fa-eye me-2 text-success"></i>
                             View
-                          </div>
-                          <div
+                          </button>
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
                             onClick={() =>
                               navigate(`/dashboard/recipes-data/${item.id}`)
@@ -295,14 +288,15 @@ export default function RecipesList() {
                           >
                             <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
                             Edit
-                          </div>
-                          <div
+                          </button>
+                          <button
+                            type="button"
                             className="action-menu-item hover-bg"
                             onClick={() => openDeleteModal(item.id)}
                           >
                             <i className="fa-regular fa-trash-can me-2 text-danger"></i>
                             Delete
-                          </div>
+                          </button>
                         </div>
                       )}
                     </td>
@@ -310,61 +304,50 @@ export default function RecipesList() {
                 ))}
               </tbody>
             </table>
-          </>
-        ) : (
-          <NoData />
-        )}
 
-        {/* Pagination */}
-        <nav aria-label="Page navigation example">
-          <ul className="pagination justify-content-center">
-            {numberOfPages.map((pageNum) => (
-              <li
-                key={pageNum}
-                className="page-item"
-                onClick={() =>
-                  getAllData(3, pageNum, nameValue, selectedTag, selectedCate)
-                }
-              >
-                <a className="page-link" href="#">
-                  {pageNum}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+            {/* Pagination */}
+            <nav aria-label="Page navigation example">
+              <ul className="pagination justify-content-center">
+                {numberOfPages.map((pageNum) => (
+                  <li
+                    key={pageNum}
+                    className="page-item"
+                    onClick={() =>
+                      getAllData(3, pageNum, nameValue, selectedTag, selectedCate)
+                    }
+                  >
+                    <a className="page-link" href="#">
+                      {pageNum}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </>
+        )}
       </div>
 
       {/* Delete Modal */}
-      {deleteConfirmId !== null && (
+      {deleteConfirmId && (
         <div className="modal-backdrop">
           <div className="modal-content-custom p-4 text-center d-flex flex-column align-items-center position-relative">
-            <i
-              className="fa fa-close modal-close-icon"
-              onClick={cancelDelete}
-            ></i>
+            <i className="fa fa-close modal-close-icon" onClick={cancelDelete}></i>
             <DeleteConfrimation deleteItem={"Recipe"} />
             <div className="modal-buttons border-top border-dark-subtle pt-4 w-100 d-flex justify-content-end">
-              <div className="w-auto">
-                <button
-                  className="button-delete px-4 d-flex align-items-center justify-content-center"
-                  onClick={handleDelete}
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete This Item"
-                  )}
-                </button>
-              </div>
+              <button
+                className="button-delete px-4 d-flex align-items-center justify-content-center"
+                onClick={handleDelete}
+                disabled={deleteLoading}
+              >
+                {deleteLoading && (
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                )}
+                {deleteLoading ? "Deleting..." : "Delete This Item"}
+              </button>
             </div>
           </div>
         </div>

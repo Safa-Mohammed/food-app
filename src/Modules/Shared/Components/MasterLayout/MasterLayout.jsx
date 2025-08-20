@@ -20,7 +20,7 @@ export default function MasterLayout({loginData}) {
         <div className="">
           <SideBar logout={logout} />
         </div>
-        <div className="w-100 "> 
+        <div className=" itemss m-auto "> 
           <Navbar loginData={loginData}/>
           <Outlet />
         </div>

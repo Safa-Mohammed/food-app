@@ -96,6 +96,8 @@ function App() {
         { path: "recipes-data/:id", element: <RecipesData /> },
         { path: "recipes-data", element: <RecipesData /> },
         { path: "user-list", element: <UserList /> },
+                { path: "user-list/id", element: <UserList /> },
+
         { path: "view-itemcategory/:id", element: <ViewCategory /> },
         { path: "view-recipes/:id", element: <RecipesView /> },
            { path: "view-user/:id", element: <ViewUser /> },
