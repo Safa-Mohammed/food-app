@@ -31,7 +31,7 @@ export default function MasterLayout({ loginData }) {
       </div>
 
       <div className="main-content p-2">
-        <Navbar loginData={loginData} />
+<Navbar loginData={loginData} />
         <Outlet />
       </div>
     </div>

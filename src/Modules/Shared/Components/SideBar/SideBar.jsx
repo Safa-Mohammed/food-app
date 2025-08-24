@@ -1,58 +1,45 @@
-// SideBar.jsx
-import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
-import { Link, useLocation } from 'react-router-dom';
+import { useContext } from "react";
+import { AuthContext } from "../../../../context/authContext";
+import "./FillRecipes.css";
 
-export default function SideBar({ logout, isCollapse, onToggle }) {
-  const location = useLocation();
+export default function FillRecipes() {
+  const { loginData } = useContext(AuthContext);
+  
+  const isNotSuperAdmin = loginData?.userGroup !== "SuperAdmin";
+  
+  const descriptionText = isNotSuperAdmin 
+    ? "You can now show the meals easily using the table, click here and show it with the table!"
+    : "You can now fill the meals easily using the table and form, click here and fill it with the table!";
+  
+  const buttonText = isNotSuperAdmin ? "Show Recipes" : "Fill Recipes";
 
   return (
-    <div className="sidebar-container">
-      <Sidebar collapsed={isCollapse} className="sidebaar py-4">
-        <Menu>
-          {/* Logo = collapse toggle */}
-          <div className="logo-container" onClick={onToggle}>
-            <img
-              src="/3.png"
-              alt="logo"
-              className="logo w-100"
-            />
-          </div>
+    <div className="recipes-banner d-flex justify-content-between align-items-center flex-wrap">
+      <div>
+        <h2 className="text-black">
+          Fill the <span className="tilte-banner">Recipes</span> !
+        </h2>
+        <p>{descriptionText}</p>
+      </div>
 
-          <MenuItem icon={<i className="fa fa-home"></i>}
-            component={<Link to="/dashboard" />}
-            active={location.pathname === "/dashboard"}>
-            Home
-          </MenuItem>
-
-          <MenuItem icon={<i className="fa fa-users"></i>}
-            component={<Link to="/dashboard/user-list" />}
-            active={location.pathname === "/dashboard/user-list"}>
-            Users
-          </MenuItem>
-
-          <MenuItem icon={<i className="fa fa-cutlery"></i>}
-            component={<Link to="/dashboard/recipes-list" />}
-            active={location.pathname === "/dashboard/recipes-list"}>
-            Recipes
-          </MenuItem>
-
-          <MenuItem icon={<i className="fa fa-list"></i>}
-            component={<Link to="/dashboard/categories-list" />}
-            active={location.pathname === "/dashboard/categories-list"}>
-            Categories
-          </MenuItem>
-
-          <MenuItem icon={<i className="fa fa-key"></i>}
-            component={<Link to="/change-password" />}
-            active={location.pathname === "/change-password"}>
-            Change Password
-          </MenuItem>
-
-          <MenuItem icon={<i className="fa fa-sign-out"></i>} onClick={logout}>
-            Logout
-          </MenuItem>
-        </Menu>
-      </Sidebar>
+      <button className="btn btn-custom d-flex align-items-center">
+        {buttonText}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          viewBox="0 0 24 24"
+          className="ms-2"
+        >
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
     </div>
   );
 }

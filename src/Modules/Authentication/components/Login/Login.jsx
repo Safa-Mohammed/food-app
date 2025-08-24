@@ -3,36 +3,40 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { axiosInstance, LOGIN_API } from "../../../../constants/api";
-import { useState } from "react";
 import {
   EMAIL_VALIDATION,
   PASSWORD_VALIDATION,
 } from "../../../../Services/validation";
+import { useContext } from "react";
+import { AuthContext } from "../../../../context/authContext";
 
-export default function Login({ getLoginData }) {
+export default function Login() {
   const navigate = useNavigate();
+  const { saveLoginData } = useContext(AuthContext);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting }, // ✅ use isSubmitting
   } = useForm();
 
   const onSubmit = async (data) => {
     try {
       const response = await axiosInstance.post(LOGIN_API, data);
-      console.log(response);
+
       localStorage.setItem("userToken", response.data.token);
+      saveLoginData();
+
       toast.success(response?.data?.message || "Login successful!");
 
       setTimeout(() => {
         navigate("/dashboard");
-      }, 3000);
+      }, 1500);
     } catch (error) {
       const msg =
         error.response?.data?.message || "Login failed. Please try again.";
       toast.error(msg);
-    } 
+    }
   };
 
   return (
@@ -89,7 +93,7 @@ export default function Login({ getLoginData }) {
         <button
           type="submit"
           className="btn-login py-1 rounded"
-          disabled={isSubmitting}
+          disabled={isSubmitting} // ✅ button disabled while submitting
         >
           {isSubmitting ? "Loading..." : "Submit"}
         </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -6,6 +6,7 @@ import './RecipesList.css'
 import Header from "../../../Shared/Components/Header/header";
 import NoData from "../../../Shared/Components/NoData/noData";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
+import { AuthContext } from "../../../../context/authContext";
 
 import imgRecipesList from "/RecipesList.png";
 import logo from "/3.png";
@@ -17,12 +18,14 @@ import {
   TAG_API,
   CATEGORY_API,
   BASE_URL_IMG,
+  FAV_URLS // Import FAV_URLS for favorite functionality
 } from "../../../../constants/api";
 
 export default function RecipesList() {
   const [recipesList, setRecipesList] = useState([]);
   const [tags, setTags] = useState([]);
   const [categories, setCategories] = useState([]);
+  const { loginData } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [numberOfPages, setNumberOfPages] = useState([]);
@@ -33,6 +36,7 @@ export default function RecipesList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(null); // Track which recipe is being favorited
 
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -82,6 +86,27 @@ export default function RecipesList() {
       setCategories(res.data.data || res.data || []);
     } catch (error) {
       toast.error("Failed to fetch categories.");
+    }
+  };
+
+  // Add to favorites function
+  const handleFavorite = async (recipeId) => {
+    setFavoriteLoading(recipeId);
+    try {
+      await axiosInstance.post(FAV_URLS.ADD_FAVORITE, {
+        recipeId: recipeId
+      });
+      toast.success("Recipe added to favorites successfully!");
+      setOpenMenuId(null); // Close the menu after adding to favorites
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      if (error.response?.status === 400 && error.response?.data?.message?.includes("already exists")) {
+        toast.info("This recipe is already in your favorites!");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to add to favorites.");
+      }
+    } finally {
+      setFavoriteLoading(null);
     }
   };
 
@@ -170,12 +195,14 @@ export default function RecipesList() {
           <h4 className="m-0 fs-5">Recipes Table Details</h4>
           <p className="m-0">View, edit or delete recipes</p>
         </div>
-        <button
-          className="btn btn-success me-2"
-          onClick={() => navigate("/dashboard/recipes-data")}
-        >
-          Add New Recipe
-        </button>
+        {loginData?.userGroup == "SuperAdmin" ? (
+          <button
+            className="btn btn-success me-2"
+            onClick={() => navigate("/dashboard/recipes-data")}
+          >
+            Add New Recipe
+          </button>
+        ) : ''}
       </div>
 
       {/* Filters */}
@@ -282,30 +309,63 @@ export default function RecipesList() {
 
                       {openMenuId === item.id && (
                         <div className="action-menu" ref={menuRef}>
-                          <button
-                            type="button"
-                            className="action-menu-item hover-bg"
-                            onClick={() => navigate(`/dashboard/view-recipes/${item.id}`)}
-                          >
-                            <i className="fa-regular fa-eye me-2 text-success"></i>
-                            View
-                          </button>
-                          <button
-                            type="button"
-                            className="action-menu-item hover-bg"
-                            onClick={() => navigate(`/dashboard/recipes-data/${item.id}`)}
-                          >
-                            <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="action-menu-item hover-bg"
-                            onClick={() => openDeleteModal(item.id)}
-                          >
-                            <i className="fa-regular fa-trash-can me-2 text-danger"></i>
-                            Delete
-                          </button>
+                          {loginData?.userGroup === "SuperAdmin" ? (
+                            <>
+                              <button
+                                type="button"
+                                className="action-menu-item hover-bg"
+                                onClick={() => navigate(`/dashboard/view-recipes/${item.id}`)}
+                              >
+                                <i className="fa-regular fa-eye me-2 text-success"></i>
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                className="action-menu-item hover-bg"
+                                onClick={() => navigate(`/dashboard/recipes-data/${item.id}`)}
+                              >
+                                <i className="fa-regular fa-pen-to-square me-2 text-primary"></i>
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="action-menu-item hover-bg"
+                                onClick={() => openDeleteModal(item.id)}
+                              >
+                                <i className="fa-regular fa-trash-can me-2 text-danger"></i>
+                                Delete
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className="action-menu-item hover-bg"
+                                onClick={() => navigate(`/dashboard/view-recipes/${item.id}`)}
+                              >
+                                <i className="fa-regular fa-eye me-2 text-success"></i>
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                className="action-menu-item hover-bg"
+                                onClick={() => handleFavorite(item.id)}
+                                disabled={favoriteLoading === item.id}
+                              >
+                                {favoriteLoading === item.id ? (
+                                  <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    Adding...
+                                  </>
+                                ) : (
+                                  <>
+                                    <i className="fa-regular fa-heart me-2 text-warning"></i>
+                                    Favorite
+                                  </>
+                                )}
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                     </td>

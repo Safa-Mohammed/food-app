@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance, BASE_URL_IMG, USER_URLS } from "../../../../constants/api";
@@ -8,8 +8,12 @@ import imgUsersList from "/RecipesList.png";
 import NoData from "../../../Shared/Components/NoData/noData";
 import DeleteConfrimation from "../../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 import logo from "/3.png";
+import { AuthContext } from "../../../../context/authContext";
+
 
 export default function UsersList() {
+const { loginData } = useContext(AuthContext);
+const isAdmin = loginData?.userGroup === "SuperAdmin";
   const [usersList, setUsersList] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -62,9 +66,15 @@ export default function UsersList() {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  if (!isAdmin) {
+    // redirect non-admin users
+    navigate("/login");
+  } else {
+    // only fetch users if admin
     getAllUsers(pageSize, currentPage);
-  }, [currentPage]);
+  }
+}, [currentPage, isAdmin, navigate]);
 
   const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
 

@@ -1,15 +1,18 @@
-import React from "react";
+// Navbar.jsx
+import React, { useContext } from "react";
+import { AuthContext } from "../../../../context/authContext";
 
-export default function Navbar({ loginData }) {
+export default function Navbar() {
+  const { loginData } = useContext(AuthContext); 
+
   return (
     <div>
-      <nav className="navbar navbar-expand-lg ">
+      <nav className="navbar navbar-expand-lg">
         <div className="container-fluid">
           <a className="navbar-brand" href="#">
             Food App
           </a>
 
-          {/* Hamburger toggle button */}
           <button
             className="navbar-toggler"
             type="button"
@@ -22,13 +25,12 @@ export default function Navbar({ loginData }) {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* Collapsible content */}
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <a className="nav-link active" href="#">
-                  {loginData ? loginData.userName : "defaultUser"}
-                </a>
+                <span className="nav-link active">
+                  {loginData?.userName || "Defualt User"} 
+                </span>
               </li>
             </ul>
           </div>

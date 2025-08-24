@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,7 @@ import "./CategoriesList.css";
 import NoData from "../../Shared/Components/NoData/noData";
 import DeleteConfrimation from "../../Shared/Components/DeleteConfirmation/deleteConfrimation";
 import { CATEGORY_VALIDATION } from "../../../Services/validation";
+import { AuthContext } from "../../../context/authContext";
 
 export default function CategoriesList() {
   const [categoryList, setCategoryList] = useState([]);
@@ -31,6 +32,7 @@ export default function CategoriesList() {
   const [nameValue, setNameValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState([]);
+const { loginData } = useContext(AuthContext);
 
   const navigate = useNavigate();
   const menuRef = useRef(null);
@@ -59,9 +61,14 @@ export default function CategoriesList() {
     }
   };
 
-  useEffect(() => {
-    getAllData(3, 1);
-  }, []);
+ useEffect(() => {
+  // Redirect if not logged in or not SuperAdmin
+  if (!loginData || loginData.userGroup !== "SuperAdmin") {
+    navigate("/login"); // or your login route
+  } else {
+    getAllData(3, 1); // only fetch data if admin
+  }
+}, [loginData]);
 
   // Toggle menu
   const toggleMenu = (id) => {

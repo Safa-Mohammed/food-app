@@ -76,7 +76,7 @@ input[type="password"] {
 }
 
 .sidebar-container .ps-menu-button:hover {
-  background-color: rgba(0, 146, 77, 0.2);
+  background-color: rgba(0, 146, 77, 0.2) !important;
   border-left: 4px solid #00924E;  
 }
 

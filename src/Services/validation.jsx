@@ -50,3 +50,23 @@ export const RECIPE_NAME_VALIDATION = {
 export const DESCRIBTION_VALIDATION = {
   required: "Description is required",
 };
+
+ export const USERNAME_VALIDATION = {
+  required: "Username is required",
+  minLength: {
+    value: 4,
+    message: "The userName must be at least 4 characters.",
+  },
+  pattern: {
+    value: /^[A-Za-z]+[A-Za-z0-9]*[0-9]$/,
+    message:
+      "The userName must contain characters and end with numbers without spaces.",
+  },
+};
+
+export const COUNTERY_VALIDATION = {
+  required: "Country is required" ,
+};
+export const PHONE_VALIDATION = {
+  required: "Phone number  is required" ,
+};
