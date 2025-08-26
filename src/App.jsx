@@ -107,12 +107,14 @@ function App() {
     },
   ]);
 
-  return (
-    <>
-      <RouterProvider router={router} />
-      <ToastContainer position="top-right" autoClose={3000} />
-    </>
-  );
+return (
+ 
+ <div>
+    <RouterProvider router={router} />
+    <ToastContainer position="top-right" autoClose={5000}/>
+  </div> 
+  
+);
 }
 
 export default App;

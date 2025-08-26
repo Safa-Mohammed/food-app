@@ -1,8 +1,9 @@
-// MasterLayout.jsx
-import React, { useState } from "react";
+
 import { useNavigate, Outlet } from "react-router-dom";
 import SideBar from "../SideBar/SideBar";
 import Navbar from "../Navbar/Navbar";
+import { ToastContainer } from "react-toastify";   
+import "react-toastify/dist/ReactToastify.css";    
 
 export default function MasterLayout({ loginData }) {
   const navigate = useNavigate();
@@ -31,9 +32,11 @@ export default function MasterLayout({ loginData }) {
       </div>
 
       <div className="main-content p-2">
-<Navbar loginData={loginData} />
+        <Navbar loginData={loginData} />
         <Outlet />
       </div>
+
+       <ToastContainer position="top-right" autoClose={5000} />
     </div>
   );
 }

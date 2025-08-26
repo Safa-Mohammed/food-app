@@ -36,13 +36,33 @@ import axios from "axios";
 export const BASE_URL = "https://upskilling-egypt.com:3006/api/v1";
 export const BASE_URL_IMG = "https://upskilling-egypt.com:3006/";
 
-// Authenticated Axios instance (for logged-in requests)
+ 
+
+ 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
+});
+
+// Interceptor to set Authorization header dynamically
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const axiosInstanceAuth = axios.create({
+  baseURL: BASE_URL,
+  timeout: 10000,
   headers: {
-    Authorization: `Bearer ${localStorage.getItem("userToken") || ""}`,
+    "Content-Type": "application/json",
   },
 });
+
 
 // Public Axios instance (for login/register requests)
 export const publicAxios = axios.create({

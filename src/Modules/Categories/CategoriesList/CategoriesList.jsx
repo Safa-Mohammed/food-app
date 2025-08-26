@@ -66,7 +66,7 @@ const { loginData } = useContext(AuthContext);
   if (!loginData || loginData.userGroup !== "SuperAdmin") {
     navigate("/login"); // or your login route
   } else {
-    getAllData(3, 1); // only fetch data if admin
+    getAllData(3, 1);  
   }
 }, [loginData]);
 

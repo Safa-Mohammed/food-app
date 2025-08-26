@@ -290,7 +290,7 @@ export default function RecipesList() {
                         src={item.imagePath ? `${BASE_URL_IMG}/${item.imagePath}` : logo}
                         alt={item.name}
                         onError={(e) => (e.currentTarget.src = logo)}
-                        style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                       className='w-25'
                       />
                     </td>
                     <td>{item.price ?? ""}</td>

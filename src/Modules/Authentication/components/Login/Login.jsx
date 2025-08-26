@@ -7,17 +7,20 @@ import {
   EMAIL_VALIDATION,
   PASSWORD_VALIDATION,
 } from "../../../../Services/validation";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../../../../context/authContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const { saveLoginData } = useContext(AuthContext);
 
+  
+  const [showPassword, setShowPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }, // ✅ use isSubmitting
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -62,17 +65,29 @@ export default function Login() {
           )}
         </div>
 
-        {/* Password */}
+        {/* Password with eye 👀 */}
         <div className="mb-3 position-relative">
           <input
             {...register("password", PASSWORD_VALIDATION)}
-            type="password"
+            type={showPassword ? "text" : "password"}
             className="form-control ps-5"
             placeholder="Password"
           />
           <div className="position-absolute start-0 top-0 mt-2 ms-2 border-end border-1 px-1">
             <i className="fa fa-lock"></i>
           </div>
+
+          {/* 👀 Eye toggle */}
+          <div
+            className="position-absolute end-0 top-0 mt-2 me-2 px-1"
+            style={{ cursor: "pointer" }}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            <i
+              className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`}
+            ></i>
+          </div>
+
           {errors.password && (
             <small className="text-danger">{errors.password.message}</small>
           )}
@@ -93,7 +108,7 @@ export default function Login() {
         <button
           type="submit"
           className="btn-login py-1 rounded"
-          disabled={isSubmitting} // ✅ button disabled while submitting
+          disabled={isSubmitting}
         >
           {isSubmitting ? "Loading..." : "Submit"}
         </button>

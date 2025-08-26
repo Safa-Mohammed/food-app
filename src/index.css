@@ -14,7 +14,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  min-height: 100vh;
+  min-height: 101vh;
 }
 
 .title {
@@ -57,7 +57,7 @@ input[type="password"] {
 /* Consolidated sidebar styles */
 .sidebar-container .ps-sidebar-container,
 .ps-sidebar-root,
-.sidebar-container { /* Fixed spelling error */
+.sidebar-container {  
   background-color: #1F263E;
   height: 100vh;
   border-top-right-radius: 50px;
@@ -65,7 +65,12 @@ input[type="password"] {
   max-width: 100%;
   box-shadow: none !important;
 }
+ 
 
+/* Make sure icons also change */
+.sidebar-container .ps-menu-button.ps-active i {
+  color: #4AA35A !important;
+}
 .ps-sidebar-root {
   z-index: 100000;
 }
@@ -103,4 +108,7 @@ input[type="password"] {
   background-color: #F8F9FB;
   border-radius: 10px;
   margin: 14px;
+}
+.Toastify__toast-container {
+  z-index: 9999;
 }

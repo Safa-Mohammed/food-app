@@ -49,7 +49,7 @@
 //   );
 // }
 
-import React, { useState, useEffect, createContext } from "react";
+import { useState, useEffect, createContext } from "react";
 import { jwtDecode } from "jwt-decode";
 
 export const AuthContext = createContext();
